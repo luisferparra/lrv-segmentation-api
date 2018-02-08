@@ -28,7 +28,6 @@ use Reliese\Database\Eloquent\Model as Eloquent;
 class AaaaTableControl extends Eloquent
 {
 	use \Reliese\Database\Eloquent\BitBooleans;
-	use \Volosyuk\SimpleEloquent\SimpleEloquent;
 
 	protected $casts = [
 		'data_type_id' => 'int'

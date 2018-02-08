@@ -1,5 +1,7 @@
 <?php
 
+
+
 return [
 
 	/*
@@ -168,6 +170,7 @@ return [
 			         * Package Service Providers...
 		*/
 		Reliese\Coders\CodersServiceProvider::class,
+		App\Providers\BladeServiceProvider::class,
 
 		/*
 			         * Application Service Providers...

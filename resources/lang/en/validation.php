@@ -99,6 +99,10 @@ return [
     |
     */
 
+    'unique_slug_without_middle_dash'               => 'The :attribute must be unique in the system.',
+    'unique_slug'               => 'The :attribute must be unique in the system.',
+
+
     'custom' => [
         'attribute-name' => [
             'rule-name' => 'custom-message',

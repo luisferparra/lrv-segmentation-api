@@ -4,6 +4,10 @@ namespace App\Exceptions;
 
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use App\Api\Error\ErrorResponse;
+use App\Api\Error\Error;
+use Illuminate\Routing\Route;
+
 
 class Handler extends ExceptionHandler
 {
@@ -48,6 +52,14 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        /**
+         * Hacemos esta excepción solo si el Accept viene en formato application/json, lo que quiere decir que viene de la api
+         */
+        $a=strtolower($request->headers->get('accept'));
+        
+        if ($a=='application/json' && $exception instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+            return new ErrorResponse(new Error(404, 'Api Resource not found', 'SVS-404'));
+        }
         return parent::render($request, $exception);
     }
 }

@@ -54,7 +54,18 @@ return [
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
         ],
-
+        'segmentationFilesRaw' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/segmentationFilesRaw'),
+            /*'url' => env('APP_URL').'/storage/segmentationFilesRAw',
+            'visibility' => 'public',*/
+        ],
+        'segmentationFiles' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/segmentationFiles'),
+            'url' => env('APP_URL').'/storage/segmentationFiles',
+            'visibility' => 'public',
+        ],
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
