@@ -44,11 +44,11 @@ class CreateUsersByIdApiRequest extends FormRequest
          */
         $rules = [
             "data" => "array|required",
-            "data.*.id" => "array|required|min:1",
+            "data.*.id" => "array|required|between:1,1000",
             "data.*.id.*" => "required|numeric",
             "data.*.api_name" => array('required', 'regex:/[a-zA-Z ]+/', 'min:5', 'max:255', 'exists:aaaa_table_controls,api_name'),
             "data.*.input_data_mode" => ["required", Rule::in(['id', 'crm', 'val'])],
-            "data.*.val" => "required|array|min:1"
+            "data.*.val" => "required|array|between:1:1000"
         ];
         foreach ($this['data'] as $key => $value) {
             $inputDataMode = $value['input_data_mode'];

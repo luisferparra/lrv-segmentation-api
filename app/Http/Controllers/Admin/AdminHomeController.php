@@ -15,7 +15,7 @@ class AdminHomeController extends Controller {
  */
 protected function __get_CountersDashboard() {
 	$users = DB::connection('segmentation')->table('bbdd_subscribers')->count();
-	$openers = DB::connection('segmentation')->table('marketing_opener')->where('val',true)->count();
+	$openers = DB::connection('segmentation')->table('marketing_openers')->where('val',true)->count();
 	$clickers = DB::connection('segmentation')->table('MARKETING_CLICKER')->where('val',true)->count();
 	$purchasers = DB::connection('segmentation')->table('MARKETING_PURCHASER')->where('val',true)->count();
 	return array('users'=>$users,'openers'=>$openers,'clickers'=>$clickers,'purchasers'=>$purchasers);

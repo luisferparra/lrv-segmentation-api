@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use DB;
+use Auth;
 use Webpatser\Uuid\Uuid;
 use App\Api\Error\Error;
 use App\Models\DataLoad;
+use Carbon\Carbon;
 
 use Illuminate\Http\Request;
 use App\Api\SegmentationSchema;
 use App\Api\Error\ErrorResponse;
 use App\Jobs\ProcessDataLoadJob;
+use App\Jobs\ProcessActivateDeactivateJob;
 use App\Api\SegmentationCounter;
 use App\Models\AaaaTableControl;
 
@@ -28,6 +31,11 @@ use App\Http\Requests\CreateUsersByNameApiRequest;
 use App\Http\Resources\SegmentationInfoValuesResource;
 use App\Http\Requests\Admin\RequestNewFieldTableControl;
 use App\Api\SegmentationCounterInterface;
+use App\Http\Requests\DataBasePostInputRequest;
+use App\Http\Requests\DataBasePutActivateDeactivateInputRequest;
+use App\Api\ActivateDeactivateBBDD;
+use App\Http\Requests\UsersByDBInputRequest;
+use App\Jobs\ProcessActivateDeactivateUsersFromDBJob;
 
 /**
  * @SWG\Swagger(
@@ -56,13 +64,38 @@ use App\Api\SegmentationCounterInterface;
  *   name="Synchro Data",
  *   description="Api for synchro CRM data with this system"
  * )
- * 
+  * @SWG\Tag(
+ *   name="Referential-Segmentation Data",
+ *   description="Api for synchro CRM data (Segmentation or Referential Data)"
+ * )
  * 
  * @SWG\Tag(
- *   name="Segmentate Operations",
+ *   name="Segmentation Operations",
  *   description="Api for Segmentate data"
  * )
  * 
+ *  * @SWG\Tag(
+ *   name="Users",
+ *   description="Api for Users Load and Unsub"
+ * )
+ * *  * @SWG\Tag(
+ *   name="Data Base",
+ *   description="Api for Managing Data Bases"
+ * )
+  * @SWG\SecurityScheme(
+ *   securityDefinition="passport",
+ *   type="oauth2",
+ *   tokenUrl="/api/login",
+ *   flow="password",
+ *   scopes={}
+ * )
+ *  *     @SWG\SecurityScheme(
+ *          securityDefinition="token",
+ * description="Please, copy the token returned in the header, and add Bearer before the token",
+ *          type="apiKey",
+ *          in="header",
+ *          name="Authorization"
+ *      )
  */
 class SegmentationController extends Controller
 {
@@ -78,6 +111,9 @@ class SegmentationController extends Controller
 	 *   path="/segmentations",
 	 *   summary="Returns all possible segmentation available in the system",
 	 * tags={"Segmentation Info"},
+	  *   security={
+ *     {"token": {}},
+ *   },
 	 *     description="Api get that returns all possibe segmentation available in the system. Inbetween all information, notice the api_name response, wich is the key for making segmentation all getting all available values for such segmentation",
 	 *     produces={ "application/json"},
 	 * @SWG\Response(
@@ -705,7 +741,7 @@ class SegmentationController extends Controller
 	 * 	  @SWG\Post(
 	 *   path="/data/loads",
 	 *   summary="Synchro CRM Data with Api-Crm",
-	 * tags={"Synchro Data"},
+	 * tags={"Synchro Data","Referential-Segmentation Data"},
 	 *     description="Functionality for admin roles. Update/Insert values for users. As entry api will receive idchannels and what will be updated for those idchannels",
 	 *     produces={ "application/json"},
 	 * consumes={"application/json"},
@@ -819,7 +855,7 @@ class SegmentationController extends Controller
 	 * @SWG\Post(
 	 *   path="/data/loads/{api_name}",
 	 *   summary="Synchro CRM Data with Api-Crm",
-	 * tags={"Synchro Data"},
+	 * tags={"Synchro Data","Referential-Segmentation Data"},
 	 *     description="Functionality for admin roles. Update/Insert values for a certain segmentation (segmentation as path in the URL). The Data will be processed in background, so you will need to check the specific api for checking the status of the process",
 	 *     produces={ "application/json"},
 	 * consumes={"application/json"},
@@ -875,7 +911,7 @@ class SegmentationController extends Controller
 	 * 			required={"id","val"},
 	 * 			@SWG\Items(
 	 * 				@SWG\Property(property="id",type="variant",description="If input_data_mode is id, this data will be numeric, as it will be the ID of the value, i.o.c it will be String. If the table is of type bit, it will only be either 0 or 1",example="HOTMAIL.COM"),
-	 * 				@SWG\Property(property="val",type="array",description="Array with the Channelsid to be updated or inserted",example="[12,13,15]",
+	 * 				@SWG\Property(property="val",type="array",description="Array with the Channelsid to be updated or inserted",example={12,13,15},
 	 * 					@SWG\Items(
 	 * 						type="integer",
 	 * 						format="int64"
@@ -960,7 +996,7 @@ class SegmentationController extends Controller
 	 * @SWG\get(
 	 *   path="/data/loads/info/{uuid_token}",
 	 *   summary="Retrieve information about the status of the queued Bulk Data Load",
-	 * 	tags={"Synchro Data"},
+	 * 	tags={"Synchro Data","Referential-Segmentation Data"},
 	 *   description="Functionality that returns for admin roles. Update/Insert values for a certain segmentation (segmentation as path in the URL). The Data will  processed in background, so you will need to check the specific api for checking the status of the process",
 	 *   produces={ "application/json"},
 	 *  @SWG\Parameter(
@@ -1081,37 +1117,298 @@ class SegmentationController extends Controller
 
 	}
 
+	/**
+	 * @SWG\get(
+	 *   path="/data/data-bases/list",
+	 *   summary="Retrieve information about the active Data Bases",
+	 * 	tags={"Synchro Data","Data Base"},
+	 *   description="Functionality that returns all Active Data Bases that can be used for retrieving information",
+	 *   produces={ "application/json"},
+
+	 * @SWG\Response(
+	 *         response=200,
+	 *         description="List of all available and active DBswill be processed in background",
+	 * 			@SWG\Schema(ref="#/definitions/getDataBaseListResponse")
+	 * 	)
+	 *) 
 
 
+	 * @SWG\get(
+	 *   path="/data/data-bases/list/all",
+	 *   summary="Retrieve information about all Data Bases",
+	 * 	tags={"Synchro Data","Data Base"},
+	 *   description="Functionality that returns all Data Bases, either active or non-active",
+	 *   produces={ "application/json"},
 
+	 * @SWG\Response(
+	 *         response=200,
+	 *         description="List of all available and active DBswill be processed in background",
+	 * 			@SWG\Schema(ref="#/definitions/getDataBaseListResponse")
+	 * 	)
+	 *) 
+
+	 * @SWG\Definition(definition="getDataBaseListResponse", type="object", required={"data"},
+	 * 		@SWG\Property(
+	 * 			property="data",
+	 * 			type="array",
+	 * 			description="Inside this tag will be included the DB list",
+	 * 			@SWG\Items(
+	 * 				ref="#/definitions/getDataBaseListItemResponse"
+	 * 				
+	 * 			)
+	 * 		)
+	 * )
+	 * 
+	 * @SWG\Definition(definition="getDataBaseListItemResponse", type="object", required={"id"},
+	 * 		@SWG\Property(
+	 * 			property="id",
+	 * 			type="integer",
+	 * 			description="Identifier of the DB (CRMid).",
+	 * 			example=9
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="val",
+	 * 			type="string",
+	 * 			description="Name of the BBDD (slug in upper case).",
+	 * 			example="DJK"
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="active",
+	 * 			type="integer",
+	 * 			description="1 if the DB is active. 0 if it is unactive.",
+	 * 			example=1
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="created_at",
+	 * 			type="date",
+	 * 			description="Date BBDD was created in the Api",
+	 * 			example="2018-02-08 12:42:00",
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="updated_at",
+	 * 			type="date",
+	 * 			description="Date BBDD was updated in the Api",
+	 * 			example=null,
+	 * 		)
+	 * )
+	 *
+	 * Función get que devolverá el listado de BBDD que están en el sistema y que podrán ser gestionadas
+	 *
+	 * @return json with the required data
+	 */
+	public function getDataBaseList($status = null)
+	{
+
+		$query = DB::connection('segmentation')->table('bbdd_lists');
+
+		if (is_null($status)) {
+			$query->where('active', 1);
+		}
+		$data = $query->get();
+
+		return response()->json(['data' => $data], 200);
+	}
 
 	/**
 	 * 
 	 * @SWG\Post(
-	 *   path="/segmentation/v1/counts",
-	 *   summary="Synchro CRM Data with Api-Crm",
-	 * tags={"Synchro Data"},
-	 *     description="Functionality for admin roles. Update/Insert values for a certain segmentation (segmentation as path in the URL). The Data will be processed in background, so you will need to check the specific api for checking the status of the process",
+	 *   path="/data/data-bases",
+	 *   summary="Insert new DB",
+	 * tags={"Synchro Data","Data Base"},
+	 *     description="Functionality for admin roles. Insert new DB in the system",
+	 *     produces={ "application/json"},
+	 * consumes={"application/json"},
+
+	 *  @SWG\Parameter(
+	 *     name="body",
+	 *     in="body",
+	 *     description="Data of the new DB.",
+	 *     required=true,
+	 *     type="object",
+	 * 		@SWG\Property(
+	 * 			required={"id","bbdd","active"},
+	 * 			@SWG\Property(
+	 * 				property="id",
+	 * 				type="integer",
+	 * 				format="int64",
+	 * 				description="DB Id from the CRM",
+	 * 				example=9
+	 * 			),
+	 * 			@SWG\Property(
+	 * 				property="bbdd",
+	 * 				type="string",
+	 * 				description="Name of the DB. Must be unique, with a max length of 5 chars. Will be stored in Upper Case",
+	 * 				example="DJK"
+	 * 			),
+	 * 			@SWG\Property(
+	 * 				property="active",
+	 * 				type="integer",
+	 * 				description="If the DB will be inserted as active or non active (1 active, 0 unactive)",
+	 * 				example=0
+	 * 			)
+	 * 		)
+	 *   ),
+	 * @SWG\Response(
+	 *         response=200,
+	 *         description="Response Correct",
+	 * 			@SWG\Schema(ref="#/definitions/CreateUsersByApiNameCRMDataResponse")
+	 * 	),
+	 *	 @SWG\Response(
+	 *         response=404,
+	 *         description="api_name not found",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     ),
+	 *  @SWG\Response(
+	 *         response=422,
+	 *         description="Error of input data validation. Can be either lack of data or lack of required fields, or duplicated api_name or name fields",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     )
+	 * )
+	 * 
+	 * 
+	 * 
+	 * 
+	 * Función que inserta el dato en la bbdd
+	 *
+	 * @return void
+	 */
+	public function postDataBaseList(DataBasePostInputRequest $request)
+	{
+		$ins = ['id' => $request->id, 'val' => strtoupper($request->bbdd), 'active' => $request->active];
+		DB::connection('segmentation')->table('bbdd_lists')->insert([
+			$ins
+		]);
+		return response()->json(array('data' => array('id' => $request->id, 'result' => 1, 'msg' => 'Data Received and inserted correctly')));
+
+	}
+
+	/**
+
+	 * 	  @SWG\Put(
+	 *   path="/data/data-bases/{idbbdd}",
+	 *   summary="Modify the Name of the DB",
+	 * tags={"Synchro Data","Data Base"},
+	 *     description="Functionality that update the Name of the DB. Notice that the new value must be unique, between 2 and 5 chars and will be stored in Upper Case. Active input value will be updated only for Super Administrator Roles.",
 	 *     produces={ "application/json"},
 	 * consumes={"application/json"},
 	 *  @SWG\Parameter(
-	 *     name="api_name",
+	 *     name="idbbdd",
 	 *     in="path",
-	 *     description="api_name field returned at the /segmentation/info api.",
+	 *     description="Id of the DB in the system that will be updated.",
 	 *     required=true,
 	 *     type="string"
 	 *   ),
 	 *  @SWG\Parameter(
 	 *     name="body",
 	 *     in="body",
-	 *     description="Data to be included or updated including the values.",
+	 *     description="Data of updated DB.",
 	 *     required=true,
 	 *     type="object",
-	 * @SWG\Schema(ref="#/definitions/CreateUsersByApiNameCRMDataInput")
+	 * 		@SWG\Property(
+	 * 			required={"bbdd","active"},
+	 * 			
+	 * 			@SWG\Property(
+	 * 				property="bbdd",
+	 * 				type="string",
+	 * 				description="Name of the DB. Must be unique, with a max length of 5 chars. Will be stored in Upper Case",
+	 * 				example="DJK"
+	 * 			),
+	 * 			@SWG\Property(
+	 * 				property="active",
+	 * 				type="integer",
+	 * 				description="Only will be updated for Administrator Roles. if the DB will be updated to active or unactive (1 active, 0 unactive)",
+	 * 				example=0
+	 * 			)
+	 * 		)
 	 *   ),
 	 * @SWG\Response(
 	 *         response=200,
-	 *         description="Response of the Data Load. Notice it is included in a Queue and will be processed in background",
+	 *         description="Response Correct",
+	 * 			@SWG\Schema(ref="#/definitions/CreateUsersByApiNameCRMDataResponse")
+	 * 	),
+	 *	 @SWG\Response(
+	 *         response=404,
+	 *         description="api_name not found",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     ),
+	 *  @SWG\Response(
+	 *         response=422,
+	 *         description="Error of input data validation. Can be either lack of data or lack of required fields, or duplicated api_name or name fields",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     )
+	 * )
+
+	 * Modifica las bbdds existentes
+	 * 
+	 * @param DataBasePostInputRequest $request la request ya validada
+	 * @param integer $idbbdd identificador del elemento a actualizar
+	 *
+	 * @return void
+	 */
+	public function putDataBaseList(DataBasePostInputRequest $request, $idbbdd)
+	{
+//Lo primero cogemos el elemento
+
+		$bbddItem = DB::connection('segmentation')->table('bbdd_lists')->find($idbbdd);
+		if (empty($bbddItem)) {
+			return new ErrorResponse(new Error(404, 'Resource Not Found', 'SVS-404'));
+
+		}
+		//De momento solo desactivamos y modificamos el campo val
+		//Hay que tener en cuenta que si la bbdd es modificada, de activación a desactivación hay que hacer muchas más cosas... quizás solo un superadmin podrá hacerlo
+		//Pero cuidado, 
+
+		if (isset($request->active) && Auth::user()->hasRole('SuperAdmin')) {
+			ProcessActivateDeactivateJob::dispatch(['action' => (($request->active == 1) ? 'activate' : 'deactivate'), 'idBbdd' => $idbbdd]);
+
+		}
+
+		DB::connection('segmentation')->table('bbdd_lists')->where('id', $idbbdd)->update(['val' => strtoupper(trim($request->bbdd)), 'updated_at' => Carbon::now()->format('Y-m-d H:i:s')]);
+		return response()->json(array('data' => array('id' => $idbbdd, 'result' => 1, 'msg' => 'Data Received and updated correctly (active not updated)')));
+
+	}
+
+
+	/**
+	 * 
+	 * 	  @SWG\Put(
+	 *   path="/data/data-bases/{idbbdd}/{action}",
+	 *   summary="Activate or deactivate a certain DB",
+	 * tags={"Synchro Data","Data Base"},
+	 *     description="Functionality for Administrator Role. Will activate or deactivate depending on the action parameter.",
+	 *     produces={ "application/json"},
+	 * consumes={"application/json"},
+	 *  @SWG\Parameter(
+	 *     name="idbbdd",
+	 *     in="path",
+	 *     description="Id of the DB in the system that will be updated.",
+	 *     required=true,
+	 *     type="string"
+	 *   ),
+	 *  @SWG\Parameter(
+	 *     name="action",
+	 *     in="path",
+	 *     description="Id of the DB in the system that will be updated. Allowed Values: activate, deactivate",
+	 *     required=true,
+	 *     type="string",
+	 * 		enum={"activate","deactivate"}
+	 *   ),
+	 *  
+	 * @SWG\Response(
+	 *         response=200,
+	 *         description="Response Correct",
 	 * 			@SWG\Schema(ref="#/definitions/CreateUsersByApiNameCRMDataResponse")
 	 * 	),
 	 *	 @SWG\Response(
@@ -1136,7 +1433,367 @@ class SegmentationController extends Controller
 	 * 
 	 * 
 	 * 
+	 * Función que activa o desactiva 
+	 * IMPORTANTE: esta función solo es para admin
+	 * Lleva bastantes connotaciones en background que habría que ver
+	 *
+	 * @param integer $idbbdd identificador de la bbdd
+	 * @param string $action enum(activate,deactivate)
+	 * @return void
+	 */
+	public function putDataBaseListActivateDeactivate(DataBasePutActivateDeactivateInputRequest $request, $idbbdd, $action)
+	{
+		//REdundante. Ya hemos hecho la comprobaciónen la validación
+/* 		$bbddItem = DB::connection('segmentation')->table('bbdd_lists')->find($idbbdd);
+		if (empty($bbddItem)) {
+			return new ErrorResponse(new Error(404, 'Resource Not Found', 'SVS-404'));
+
+		} */
+//Redundante. Esta validaciónya la hace en el objeto de validación de la request
+		switch ($action) {
+			case 'activate':
+				# code...
+				$res = 1;
+				break;
+			case 'deactivate':
+				$res = 0;
+				break;
+			default:
+				/**
+				 * Esto no hará falta ya que los datos de entrada vienen validados
+				 */
+				return new ErrorResponse(new Error(403, 'Action not allowed or not found', 'SVS-403'));
+
+				break;
+		}
+		ProcessActivateDeactivateJob::dispatch(['action' => $action, 'idBbdd' => $idbbdd]);
+		/*DB::connection('segmentation')->table('bbdd_lists')->where('id', $idbbdd)->update(['active' => $res, 'updated_at' => Carbon::now()->format('Y-m-d H:i:s')]);
+		 */
+		return response()->json(array('data' => array('id' => $idbbdd, 'result' => 1, 'msg' => 'Data Received and updated correctly ')));
+	}
+
+
+
+
+/**
+
+
 	 * 
+	 * 	  @SWG\Put(
+	 *   path="/data/users/{idbbdd}/unsub",
+	 *   summary="Unsub users from a certain DB",
+	 * tags={"Synchro Data","Users"},
+	 *     description="Functionality for Administrator Role. Given a certain DB (query parameter), and a list of idChannels, the api will unsub users from that DB. If the user is unique for that DB, will remove data from the segmentations.",
+	 *     produces={ "application/json"},
+	 * consumes={"application/json"},
+	 *  @SWG\Parameter(
+	 *     name="idbbdd",
+	 *     in="path",
+	 *     description="Id of the DB in the system that will be updated.",
+	 *     required=true,
+	 *     type="string"
+	 *   ),
+
+	 *  
+	 * @SWG\Response(
+	 *         response=200,
+	 *         description="Response Correct",
+	 * 			@SWG\Schema(ref="#/definitions/CreateUsersByApiNameCRMDataResponse")
+	 * 	),
+	 *	 @SWG\Response(
+	 *         response=404,
+	 *         description="api_name not found",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     ),
+	 *  @SWG\Response(
+	 *         response=422,
+	 *         description="Error of input data validation. Can be either lack of data or lack of required fields, or duplicated api_name or name fields",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     )
+	 * )
+
+	 	 * 
+	 * 	  @SWG\Post(
+	 *   path="/data/users/{idbbdd}/register",
+	 *   summary="Register users from a certain DB",
+	 * tags={"Synchro Data","Users"},
+	 *     description="Functionality for Administrator Role. Given a certain DB (query parameter), and a list of idChannels, the api will Register such users in that DB",
+	 *     produces={ "application/json"},
+	 * consumes={"application/json"},
+	 *  @SWG\Parameter(
+	 *     name="idbbdd",
+	 *     in="path",
+	 *     description="Id of the DB in the system that will be updated.",
+	 *     required=true,
+	 *     type="string"
+	 *   ),
+
+	 *  
+	 * @SWG\Response(
+	 *         response=200,
+	 *         description="Response Correct",
+	 * 			@SWG\Schema(ref="#/definitions/CreateUsersByApiNameCRMDataResponse")
+	 * 	),
+	 *	 @SWG\Response(
+	 *         response=404,
+	 *         description="api_name not found",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     ),
+	 *  @SWG\Response(
+	 *         response=422,
+	 *         description="Error of input data validation. Can be either lack of data or lack of required fields, or duplicated api_name or name fields",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     )
+	 * )
+
+
+
+* Función que da de alta o baja usuarios en una bbdd
+ * Lo mete en un job
+ *
+ * @param UsersByDBInputRequest $request
+ * @param integer $idbbdd Identificador de bbdd
+ * @param string $action acción a realizar: activate / deactivate
+ * @return void
+ */
+public function putActivateDeactivateUsersInDB(UsersByDBInputRequest $request, $idbbdd, $action) {
+	
+	ProcessActivateDeactivateUsersFromDBJob::dispatch(['type'=>'byBBDD','action' => $action, 'idBbdd' => $idbbdd,'requested'=>$request->all()]);
+	/*DB::connection('segmentation')->table('bbdd_lists')->where('id', $idbbdd)->update(['active' => $res, 'updated_at' => Carbon::now()->format('Y-m-d H:i:s')]);
+	 */
+	return response()->json(array('data' => array('id' => $idbbdd, 'result' => 1, 'msg' => 'Data Received and updated correctly. Will be updated asap')));
+}
+
+
+
+	/**
+	 * 
+	 * @SWG\Post(
+	 *   path="/segmentation/v1/counts",
+	 *   summary="Api for counting a specific segmentation",
+	 * tags={"Segmentation Operations"},
+	 *     description="Api that receives a certain information. Api returns number of users that matchs exactly with the desired segmentation",
+	 *     produces={ "application/json"},
+	 * consumes={"application/json"},
+	 *  @SWG\Parameter(
+	 *     name="body",
+	 *     in="body",
+	 *     description="Json that includes information for segmentate.",
+	 *     required=true,
+	 *     type="object",
+	 * @SWG\Schema(ref="#/definitions/CounterDataInputSchema")
+	 *   ),
+	 * @SWG\Response(
+	 *         response=200,
+	 *         description="Response of the Segmentation",
+	 * 			@SWG\Schema(ref="#/definitions/CounterDataInputSchemaResponse")
+	 * 	),
+	 *	 @SWG\Response(
+	 *         response=404,
+	 *         description="api_name not found",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     ),
+	 *  @SWG\Response(
+	 *         response=422,
+	 *         description="Error of input data validation. Can be either lack of data or lack of required fields, or duplicated api_name or name fields",
+	 * 			@SWG\Schema(ref="#/definitions/SegmentationInfoApiErrorResponses")
+	 * 
+	 
+	 *        
+	 *     )
+	 * )
+	 * 
+	 * 
+	 * @SWG\Definition(definition="CounterDataInputSchema", type="object", required={"segmentation","input_data_mode","bbdd_strict_order","limits","bbdd"},
+	 * 
+	 * 		@SWG\Property(
+	 * 			property="input_data_mode",
+	 * 			type="string",
+	 * 			description="Type of input data. It can be the ID of the value (id), the CRM value (crm) or the normalized value (val). It is VERY IMPORTANT due to all queries of searching data will depends on this value",
+	 * 			enum={"id","crm","val"},
+	 * 			example="crm"
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="bbdd_strict_order",
+	 * 			type="integer",
+	 * 			description="If is set to 1, output counter will depends on the order the Data Bases Lists is received",
+	 * 			enum={0,1},
+	 * 			example=1
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="kid",
+	 * 			type="integer",
+	 * 			description="Kami identifier. Not Required. If is set to 1, output counter will depends on the order the Data Bases Lists is received",
+	 * 			example=345
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="token",
+	 * 			type="uuid",
+	 * 			description="Token generated in a first Counter Action. Not implemented.",
+	 * 			example="d0e7facd-6778-41b4-8e30-5ead387f7478"
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="segmentation",
+	 * 			type="object",
+	 * 			description="Input data object with the required segmentation",
+	 * 			required={"data"},
+	 * 			@SWG\Property(
+	 * 				property="data",
+	 * 				type="array",
+	 * 				description="List of different segmentations required",
+	 * 				@SWG\Items(
+	 * 					
+	 * 						@SWG\Property(
+	 * 							property="api_name",
+	 * 							type="string",
+	 * 							description="api_name field returned at the /segmentation/info api",
+	 * 							example="api-name"
+	 * 						),
+	 * 						@SWG\Property(
+	 * 							property="value",
+	 * 							type="array",
+	 * 							description="If input_data_mode is id, this data will be numeric, as it will be the ID of the value, i.o.c it will be String. If the table is of type bit, it will only be either 0 or 1 and only will be loaded the first element of the array",
+	 * 							example={3,4,56},
+	 * 							@SWG\Items(
+	 * 						type="integer",
+	 * 						format="int64"
+	 * 					)
+	 * 						)
+	 * 					
+	 * 				)
+	 * 			)
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="limits",
+	 * 			type="object",
+	 * 			description="Limits for returning data. More information will be added soon",
+	 * 			required={"limit"},
+	 * 			@SWG\Property(
+	 * 				property="limit",
+	 * 				type="integer",
+	 * 				format="int64",
+	 * 				description="Total of number of users returned",
+	 * 				example=234000
+	 * 
+	 * 			)
+	 * 
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="bbdd",
+	 * 			type="array",
+	 * 			description="List of Data Bases required for getting the data",
+	 * 			example={"NET","DJK"},
+	 * 			@SWG\Items(
+	 * 				type="string"
+	 * 
+	 * 			)
+	 * 		)
+	 * 
+	 * )
+	 * 
+	 * @SWG\Definition(definition="CounterDataInputSchemaResponse", type="object", required={"totitems","totsegmentation","data","errors"},
+	 * 		@SWG\Property(
+	 * 			property="totitems",
+	 * 			type="integer",
+	 * 			description="Number of users found, and which limit will be the limit number from the request limits->limit",
+	 * 			example=10000
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="totsegmentation",
+	 * 			type="integer",
+	 * 			description="Number of users found, and NOT HAVING in mind the limit number from the request limits->limit",
+	 * 			example=23909
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="data",
+	 * 			type="array",
+	 * 			description="Array with information, by Data Base (from the bbdd array of the request)",
+	 * 			required={"idbbdd","bbdd","tot","unique","urlFile"},
+	 * 			@SWG\Items(
+	 * 				@SWG\Property(
+	 * 					property="idbbdd",
+	 * 					description="Data Base Id",
+	 * 					type="integer",
+	 * 					format="int64",
+	 * 					example=9
+	 * 				),
+	 * 				@SWG\Property(
+	 * 					property="bbdd",
+	 * 					description="Slug of the Data Base",
+	 * 					type="string",
+	 * 					example="DJK"
+	 * 				),
+	 * 				@SWG\Property(
+	 * 					property="tot",
+	 * 					description="Total number of users found for the segmentation.",
+	 * 					type="integer",
+	 * 					format="int64",
+	 * 					example=147065
+	 * 				),
+	 * 				@SWG\Property(
+	 * 					property="unique",
+	 * 					description="Unique number of users found for the segmentation, with the order of the Data Base from the Request.",
+	 * 					type="integer",
+	 * 					format="int64",
+	 * 					example=2069
+	 * 				),
+	 * 				@SWG\Property(
+	 * 					property="urlFile",
+	 * 					description="Url of the file for that BBDD that can be downloaded. The file is a CSV file with only 1 column of users Id (Id Channels)",
+	 * 					type="string",
+	 * 					example="http:\/\/lrv-crm-api.test\/storage\/segmentationFiles\/e\/1b\/e1bc37bf-a008-48a0-9f37-08ec6da2a484-DJK.csv"
+	 * 				)
+	 * 			)
+	 * 		),
+	 * 		@SWG\Property(
+	 * 			property="errors",
+	 * 			type="object",
+	 * 			description="Errors found during segmentation",
+	 * 			required={"numErrors","data"},
+	 * 			@SWG\Property(
+	 * 				property="numErrors",
+	 * 				type="integer",
+	 * 				description="Number of errors found during segmentation",
+	 * 				example=0
+	 * 			),
+	 * 			@SWG\Property(
+	 * 				property="data",
+	 * 				type="array",
+	 * 				description="List of errors description",
+	 * 				@SWG\Items(
+	 * 					@SWG\Property(
+	 * 						property="msg",
+	 * 						type="string",
+	 * 						description="Error Description",
+	 * 						example="Ignored Column [Name of the Column] (Value not admited)"
+	 * 
+	 * 					),
+	 * 					@SWG\Property(
+	 * 						property="errorCode",
+	 * 						type="integer",
+	 * 						description="Error Code",
+	 * 						example=421
+	 * 
+	 * 					)
+	 * 				)
+	 * 			)
+	 * 		)
+	 * )
 	 * 
 	 * La madre de todas las apis.
 	 * Realizará un conteo dada una segmentación de entrada
@@ -1145,7 +1802,7 @@ class SegmentationController extends Controller
 	 *
 	 * @return void
 	 */
-	public function createNewCounterSegmentation(CounterInputRequest $request,SegmentationCounterInterface $segmentationCounter)
+	public function createNewCounterSegmentation(CounterInputRequest $request, SegmentationCounterInterface $segmentationCounter)
 	{
 
 
@@ -1156,8 +1813,8 @@ class SegmentationController extends Controller
 		$segmentationRequest->save();
 		$counterResponse = $segmentationCounter->processRequest($segmentationRequest);
 
-		return response()->json($counterResponse,200);
-		
+		return response()->json($counterResponse, 200);
+
 	}
 
 }

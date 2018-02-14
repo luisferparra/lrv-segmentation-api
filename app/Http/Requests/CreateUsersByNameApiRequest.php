@@ -18,11 +18,11 @@ class CreateUsersByNameApiRequest extends ApiNameInputValidation
 
     public function withValidator($validator)
     {
-        $validator->sometimes("data.*.id", 'required|numeric', function ($input) {
+        $validator->sometimes("data.*.id", 'required|numeric|between:1,1000', function ($input) {
 
             return $input->input_data_mode == 'id';
         });
-        $validator->sometimes("data.*.id", 'required|string', function ($input) {
+        $validator->sometimes("data.*.id", 'required|string|between:1,1000', function ($input) {
 
             return $input->input_data_mode != 'id';
         });
@@ -38,8 +38,8 @@ class CreateUsersByNameApiRequest extends ApiNameInputValidation
             "input_data_mode" => ["required", Rule::in(['id', 'crm', 'val'])],
             "data" => "array|required",
 //"data.*.id"=>"required|string|sometimes",
-            "data.*.val" => "array|required",
-            "data.*.val.*" => "required|numeric|exists:segmentation.bbdd_subscribers,id"
+            "data.*.val" => "array|required|between:1,1000",
+            "data.*.val.*" => "required|numeric|exists:segmentation.bbdd_users,id"
             //
         ]);
     }

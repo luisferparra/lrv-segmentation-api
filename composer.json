@@ -11,10 +11,12 @@
         "guidocella/eloquent-insert-on-duplicate-key": "^2.1",
         "jeroennoten/laravel-adminlte": "^1.22",
         "laravel/framework": "5.5.*",
+        "laravel/passport": "^4.0.3",
         "laravel/tinker": "~1.0",
         "laravelcollective/html": "^5.4.0",
         "propaganistas/laravel-intl": "^1.2",
         "reliese/laravel": "^0.0.13",
+        "spatie/laravel-permission": "^2.9",
         "volosyuk/simple-eloquent": "*",
         "webpatser/laravel-uuid": "^3.0"
     },

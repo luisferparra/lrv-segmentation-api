@@ -86,7 +86,7 @@ protected $dataLoad;
      * @return void
      */
     public function handle()
-    {
+    {set_time_limit(0);
         //
         $dataLoadObject = new LoadDataProcess($this->dataLoad);
         $errors = $dataLoadObject->getErrors();

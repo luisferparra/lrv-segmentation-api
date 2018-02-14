@@ -83,20 +83,32 @@ class SegmentationSchema
     }
 
 
-/**
- * Función que crea el esquema de segmentación de tablas, si es un bit
- *
- * @param $tableName $tableName Nombre de la tabla a Crear
- * @return boolean true
- */
+    /**
+     * Función que crea el esquema de segmentación de tablas, si es un bit
+     *
+     * @param $tableName $tableName Nombre de la tabla a Crear
+     * @return boolean true
+     */
     protected function __postCreateTableSystem_Bit($tableName)
     {
-        Schema::connection('segmentation')->create($tableName, function ($table)  {
-            $table->integer('id')->unasigned()->primary()->references('id')->on('bbdd_subscribers');
+        Schema::connection('segmentation')->create($tableName, function ($table) {
+            $table->integer('id')->unasigned()->primary();
             $table->boolean('id_val')->index();
 
-            $table->primary(['id']);
+            //$table->primary(['id']);
+            $table->foreign('id')->references('id')->on('bbdd_users');
+
         });
+        Schema::connection('temp')->create($tableName, function ($table) {
+            $table->integer('id')->unasigned()->primary();
+            $table->boolean('id_val')->index();
+            //$table->integer('bbdd_id')->unasigned->index();
+
+            //$table->primary(['id']);
+            
+
+        });
+        //Creamos la temporal
         return true;
     }
 
@@ -113,7 +125,7 @@ class SegmentationSchema
     {
         if (!$this->allowCreateAndRemove)
             return false;
-        
+
         $tableNameVals = $tableName . $this->tablePostFix;
         $existsTable = $this->getTableExists($tableName);
         $existsTableVals = $this->getTableExists($tableNameVals);
@@ -137,15 +149,30 @@ class SegmentationSchema
                 $table->increments('id');
                 $table->string('val_crm')->unique();
                 $table->string('val_normalized')->unique();
+
             });
         }
         if (!$this->inEdition || ($this->inEdition && !$existsTable)) {
 
             Schema::connection('segmentation')->create($tableName, function ($table) use ($tableNameVals) {
-                $table->integer('id')->unasigned()->references('id')->on('bbdd_subscribers');
-                $table->integer('id_val')->references('id')->on($tableNameVals);
+                $table->integer('id')->unasigned();
+                $table->integer('id_val')->index();
 
                 $table->primary(['id', 'id_val']);
+                $table->foreign('id')->references('id')->on('bbdd_users');
+                $table->foreign('id_val')->references('id')->on($tableNameVals);
+
+
+            });
+            //creamos también su réplica en temporal
+            Schema::connection('temp')->create($tableName, function ($table){
+                $table->integer('id')->unasigned();
+                $table->integer('id_val')->index();
+                
+                $table->primary(['id', 'id_val']);
+                
+
+
             });
         }
         return true;
