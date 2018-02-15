@@ -173,6 +173,7 @@ return [
 		*/
 		Reliese\Coders\CodersServiceProvider::class,
 		App\Providers\BladeServiceProvider::class,
+		InsertOnDuplicateKey\InsertOnDuplicateKeyServiceProvider::class,
 
 		/*
 			         * Application Service Providers...

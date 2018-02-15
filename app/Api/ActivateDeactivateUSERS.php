@@ -12,6 +12,7 @@ namespace App\Api;
 use DB;
 use Schema;
 use App\Models\AaaaTableControl;
+use Carbon\Carbon;
 
 class ActivateDeactivateUSERS
 {
@@ -93,12 +94,22 @@ class ActivateDeactivateUSERS
      */
     protected function unsubByDB($usersList)
     {
+        /**
+         * Array que guardaremos los idchannels que antes de ser borrados hay que borrar su presencia en las tablas auxiliares de segmentaci´no
+         */
         $arrToRemoveUsers = [];
+        /**
+         * Array con inserts para log históirico
+         */
+        $arrRemovedUsersData = [];
+        
         foreach ($usersList as $idChannel) {
+            $arrRemovedUsersData[] = ['id'=>$idChannel,'id_val'=>$this->idBbdd];
             $searchUser = DB::connection('segmentation')->table('bbdd_users')->where('id', $idChannel)->where('id_val', '!=', $this->idBbdd)->count();
             if ($searchUser == 0) {
                 $arrToRemoveUsers[] = $idChannel;
             } else {
+
                 DB::connection('segmentation')->table('bbdd_users')->where('id', $idChannel)->where('id_val', $this->idBbdd)->delete();
             }
 
@@ -109,6 +120,13 @@ class ActivateDeactivateUSERS
     //El último where no sería necesario ya que el usuario es único. Lo ponemos para asegurarnos que se borra a quien se dice
             DB::connection('segmentation')->table('bbdd_users')->whereIn('id', $arrToRemoveUsers)->where('id_val', $this->idBbdd)->delete();
         }
+
+      /*   \DB::listen(function($sql) {
+            print_r($sql->sql);
+        }); */
+        //Insertamos en el log la baja realizada junto con la fecha
+  
+        DB::connection('temp')->table('bbdd_users_historic_unsubs')->insertOnDuplicateKey($arrRemovedUsersData,[DB::raw("`updated_at`='".Carbon::now()->format('Y-m-d H:i:s')."'")]);
 
     }
 
