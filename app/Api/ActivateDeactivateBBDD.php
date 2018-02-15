@@ -87,6 +87,7 @@ class ActivateDeactivateBBDD
     /**
      * Funcionalidad que desactiva una bbdd dada
      *
+     * 
      * @return void
      */
     protected function deactivate()
