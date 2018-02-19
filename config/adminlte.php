@@ -111,14 +111,14 @@ return [
 		'M E N U',
 
 		[
-			'text' => 'Campos',
+			'text' => 'CRM Fields',
 			'url' => 'admin/fields',
 			'icon' => 'server',
 		],
 		'ACCOUNT SETTINGS',
 		[
-			'text' => 'Profile',
-			'url' => 'admin/settings',
+			'text' => 'Users and Profiles',
+			'url' => 'admin/users',
 			'icon' => 'user',
 		],
 		[

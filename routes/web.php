@@ -43,4 +43,8 @@ Route::middleware(['auth'])->group(function () {
 	
 	Route::get('/admin/segmentation-data/{tableControl}/edit/{valueId}', 'Admin\AdminDataController@valuesEdit')->where('tableControl', '[0-9]+')->where('valueId', '[0-9]+')->name('AdminValuesEdit');
 
+	Route::get('/admin/users','Admin\AdminUsersController@show')->name('AdminUsersList');
+	Route::get('/admin/users/new','Admin\AdminUsersController@userNew')->name('AdminUsersNew');
+	
+
 });
