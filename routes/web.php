@@ -45,6 +45,8 @@ Route::middleware(['auth'])->group(function () {
 
 	Route::get('/admin/users','Admin\AdminUsersController@show')->name('AdminUsersList');
 	Route::get('/admin/users/new','Admin\AdminUsersController@userNew')->name('AdminUsersNew');
+	Route::post('/admin/users/new','Admin\AdminUsersController@userNewInsert')->name('AdminUsersNewPost');
+	
 	
 
 });

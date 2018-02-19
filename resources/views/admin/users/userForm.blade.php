@@ -13,7 +13,7 @@
 </div>
 @endif 
 
-{!! Form::open(['route' => 'AdminFieldNewPost']) !!} 
+{!! Form::open(['route' => 'AdminUsersNewPost']) !!} 
 
 
 <div class="box box-default">
@@ -33,7 +33,9 @@
               <div class="form-group">
                     {!! Form::bsInputText('name','Users Name',null,['placeholder'=>'Name']) !!}
                     {!! Form::bsInputText('email','Users Email',null,['placeholder'=>'Email']) !!}
-                    {!! Form::bsDropdown('roles','roles', $roles,null,['multiple'=>true]) !!}
+                    {!! Form::bsInputText('password','Password Email',null,['placeholder'=>'Password']) !!}
+                    
+                    {!! Form::bsDropdown('roles','roles', $roles,null,['multiple'=>true,'id'=>'roles']) !!}
                     
                 
               </div>
@@ -57,15 +59,18 @@
             <!-- /.col -->
           </div>
           <!-- /.row -->
+          <div class="box-footer">
+                {!! Form::bsSubmit('Insert',['class'=>'btn btn-primary']) !!}
+            </div>
         </div>
         <!-- /.box-body -->
        
       </div>
       <!-- /.box -->
     </div>
-    <div class="box-footer">
-            {!! Form::bsSubmit(route('AdminUsersNew'),'Insert',['class'=>'btn btn-primary']) !!}
-        </div>
+
+            
+        
 {!! Form::close() !!} 
 @stop
 @section('js')
