@@ -37,8 +37,10 @@
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Roles</th>
+                                        <th>Status</th>
                                         <th>Created At</th>
                                         <th>Updated At</th>
+                                        <th>Last Loggin</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -51,28 +53,38 @@
                                         <td> @forelse ($datum->roles as $role) - {{$role->name}}<br /> @empty @endforelse
                                         </td>
                                         <td>
+                                            @if ($datum->active==1)
+                                                <span class="label label-success">active</span>
+                                            @else
+                                                <span class="label label-danger">Inactive</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             {{$datum->created_at->format('Y-m-d')}}
                                         </td>
                                         <td>
                                             @if(!is_null($datum->updated_at)) {{$datum->updated_at->format('Y-m-d')}} @endif
                                         </td>
+                                        <td> @if(!is_null($datum->last_logged_at)) {{$datum->last_logged_at->format('Y-m-d')}} @endif</td>
                                         <td>
                                 
-                                                <a href="">
+                                                <a href="{{route('AdminUserEdit',['userid'=>$datum->id])}}" title="Edit">
                                                     <button type="button" class="btn btn-warning">
                                                         <i class="fa fa-edit"></i>
                                                     </button>
                                                 </a>
-                                                <a href="">
-                                                        <button type="button" class="btn btn-info">
-                                                            <i class="fa fa-bar-chart"></i>
-                                                        </button>
-                                                    </a>
-                                                <a  class="confirm" data-href="" data-toggle="modal" data-target="#confirm" data-description="remove">
-                                                    <button type="button" class="btn btn-danger">
-                                                        <i class="fa fa-remove"></i>
+                                                @if ($datum->active==1)
+                                                {{ Form::bsConfirmIcon(route('AdminUserDeactivate',['userid'=>$datum->id]),'deactivate','fa-toggle-off text-danger','btn-default')}}
+                                                
+                                                @else
+                                                <a href="{{route('AdminUserActivate',['userid'=>$datum->id])}}" title="Activate">
+                                                    <button type="button" class="btn btn-default">
+                                                        <i class="text-success fa fa-toggle-on"></i>
                                                     </button>
                                                 </a>
+                                                @endif
+                                                {{ Form::bsConfirmIcon(route('AdminUserRemove',['userid'=>$datum->id]),'remove')}}
+                                                
                                             </td>
                                     </tr>
                                     @empty @endforelse
@@ -90,24 +102,7 @@
         </div>
     </div>
     
-    <div class="modal fade modal-warning" id="confirm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                    <h4 class="modal-title" id="myModalLabel">Confirm Action.</h4>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to <span class="confirm-description"></span> this item?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">NO</button>
-                    <a class="btn btn-warning btn-ok">yes</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
+ 
 
 @stop 
 @section ('css')

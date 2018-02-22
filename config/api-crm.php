@@ -16,5 +16,5 @@ return [
     /**
      * Nombre de la tabla que tiene realmente id_channel==>bbdd asociada
      */
-    'table_bbdd_control' =>'bbdd_subscribers',
+    'table_bbdd_control' =>'bbdd_users',
 ];

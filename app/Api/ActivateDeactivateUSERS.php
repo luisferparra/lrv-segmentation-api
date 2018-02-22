@@ -121,12 +121,10 @@ class ActivateDeactivateUSERS
             DB::connection('segmentation')->table('bbdd_users')->whereIn('id', $arrToRemoveUsers)->where('id_val', $this->idBbdd)->delete();
         }
 
-      /*   \DB::listen(function($sql) {
-            print_r($sql->sql);
-        }); */
+/* ` */
         //Insertamos en el log la baja realizada junto con la fecha
   
-        DB::connection('temp')->table('bbdd_users_historic_unsubs')->insertOnDuplicateKey($arrRemovedUsersData,[DB::raw("`updated_at`='".Carbon::now()->format('Y-m-d H:i:s')."'")]);
+        DB::connection('temp')->table('bbdd_users_historic_unsubs')->insertOnDuplicateKey($arrRemovedUsersData,['updated_at'=>Carbon::now()->format('Y-m-d H:i:s')]);
 
     }
 

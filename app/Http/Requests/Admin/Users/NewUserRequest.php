@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class NewUserRequest extends FormRequest
 {
+    private $req = null;
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -13,7 +14,16 @@ class NewUserRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
+    }
+
+    public function withValidator($validator)
+    {
+        //$input = $this->request;
+        $validator->sometimes("password", 'required|string|min:5|max:20"', function ($input) {
+
+            return (!empty($input->editing) && $input->password != '');
+        });
     }
 
     /**
@@ -23,13 +33,25 @@ class NewUserRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            "name"=>"required|min:5|max:255|string|regex:/[a-zA-Z ]",
-            "email"=>"required|email|unique:users,email",
-            "passport"=>"required",
-            "roles"=>"required|array",
-            "roles.*"=>"required|string|exists:roles,name"
+        $this->req = $this->request->all();
+       
+        $email = '';
+        $pwd = ['password' => "required|string|min:5|max:20"];
+        if (!empty($this->req['editing'])) {
+            $email = ',' . $this->req['id'];
+            if (empty($input->password))
+                $pwd = [];
+        }
+
+        $rulesValidate = [
+            "name" => "required|min:5|max:255|string|regex:/[a-zA-Z ]/",
+            "email" => "required|email|unique:users,email" . $email,
+
+            "roles" => "required|array",
+            "roles.*" => "required|string|exists:roles,name"
             //
         ];
+        $rulesValidate = array_merge($rulesValidate, $pwd);
+        return $rulesValidate;
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\User;
 use Illuminate\Support\Facades\Auth;
 use Validator;
+use Carbon\Carbon;
 
 class PassportController extends Controller
 {
@@ -19,12 +20,15 @@ class PassportController extends Controller
     public function login(Request $request)
     {
         
-        if (Auth::attempt(['email' => $request['username'], 'password' => $request['password']])) {
+        if (Auth::attempt(['email' => $request['username'], 'password' => $request['password'],'active'=>true])) {
             $user = Auth::user();
             $token = $user->createToken('MyApp',$user->getRoleNames()->toArray())->accessToken;
             $success['token'] = $token;
             
             $fromSwagger = $request->get('grant_type') == 'password';
+            //Actualizamos su último loggeo
+            $user->last_logged_at = Carbon::now()->format('Y-m-d H:i:s');
+            $user->save();
             if ($fromSwagger)
                 return response()->json([$token]);
             return response()->json(['sucess' => $success], $this->successStatus);

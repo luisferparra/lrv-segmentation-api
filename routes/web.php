@@ -46,6 +46,13 @@ Route::middleware(['auth'])->group(function () {
 	Route::get('/admin/users','Admin\AdminUsersController@show')->name('AdminUsersList');
 	Route::get('/admin/users/new','Admin\AdminUsersController@userNew')->name('AdminUsersNew');
 	Route::post('/admin/users/new','Admin\AdminUsersController@userNewInsert')->name('AdminUsersNewPost');
+	Route::get('/admin/users/edit/{user}','Admin\AdminUsersController@userEdit')->where('user','[0-9]+')->name('AdminUserEdit');
+	Route::post('/admin/users/edit/{user}','Admin\AdminUsersController@userEditPost')->where('user','[0-9]+')->name('AdminUserEditPost');
+	Route::get('/admin/users/remove/{user}','Admin\AdminUsersController@userRemove')->where('user','[0-9]+')->name('AdminUserRemove');
+	Route::get('/admin/users/activate/{user}','Admin\AdminUsersController@userActivate')->where('user','[0-9]+')->name('AdminUserActivate');
+	Route::get('/admin/users/deactivate/{user}','Admin\AdminUsersController@userDeactivate')->where('user','[0-9]+')->name('AdminUserDeactivate');
+	
+	
 	
 	
 

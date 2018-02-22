@@ -82,11 +82,8 @@
                                             <i class="fa fa-bar-chart"></i>
                                         </button>
                                     </a>
-                                <a  class="confirm" data-href="{{route('AdminFieldsRemove',['tableControl'=>$datum->id])}}" data-toggle="modal" data-target="#confirm" data-description="remove">
-                                    <button type="button" class="btn btn-danger">
-                                        <i class="fa fa-remove"></i>
-                                    </button>
-                                </a>
+                                    {{ Form::bsConfirmIcon(route('AdminFieldsRemove',['tableControl'=>$datum->id]),'remove')}}
+                                
                             </td>
                         </tr>
                         @empty @endforelse
@@ -105,23 +102,7 @@
     </div>
 </div>
 
-<div class="modal fade modal-warning" id="confirm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                <h4 class="modal-title" id="myModalLabel">Confirm Action.</h4>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to <span class="confirm-description"></span> this item?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">NO</button>
-                <a class="btn btn-warning btn-ok">yes</a>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 @stop 
 @section ('css')

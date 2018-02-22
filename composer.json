@@ -8,6 +8,7 @@
         "php": ">=7.0.0",
         "darkaonline/l5-swagger": "5.5.*",
         "fideloper/proxy": "~3.3",
+        "guidocella/eloquent-insert-on-duplicate-key": "^2.2",
         "jeroennoten/laravel-adminlte": "^1.22",
         "laravel/framework": "5.5.*",
         "laravel/passport": "^4.0.3",
@@ -34,8 +35,7 @@
             "database/factories"
         ],
         "psr-4": {
-            "App\\": "app/",
-            "InsertOnDuplicateKey\\": "../eloquent-insert-on-duplicate-key/src"
+            "App\\": "app/"
         }
     },
     "autoload-dev": {
