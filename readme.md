@@ -1,85 +1,126 @@
+# CRM Api v1.0
+Api Collection for segmentation and data management
 
-<table>
-   <tr>
-      <td><img src="http://spatie.github.io/laravel-permission/sponsor-logo.png"></td>
-      <td>If you want to quickly add authentication and authorization to Laravel projects, feel free to check Auth0's Laravel SDK and free plan at <a href="https://auth0.com/overview?utm_source=GHsponsor&utm_medium=GHsponsor&utm_campaign=laravel-permission&utm_content=auth">https://auth0.com/overview</a>.</td>
-   </tr>
-</table>
+Developed using Laravel Framework 5.5
+if you need to check exact framework version run `php artisan -V`
 
+## Requisites
+* PHP >= 7.0.0
+* Mysql
+* Nginx
+* Redis
+* Node
+* npm
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/spatie/laravel-permission.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-permission)
-[![Build Status](https://img.shields.io/travis/spatie/laravel-permission/master.svg?style=flat-square)](https://travis-ci.org/spatie/laravel-permission)
-[![StyleCI](https://styleci.io/repos/42480275/shield)](https://styleci.io/repos/42480275)
-[![Total Downloads](https://img.shields.io/packagist/dt/spatie/laravel-permission.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-permission)
+Php Modules
+* Curl
+* Fileinfo
+* Imap
+* Json
+* OpenSSL
+* PDO
+* Mbstring
+* Tokenizer
+* XML
+* bcmath
 
-* [Installation](#installation)
-* [Usage](#usage)
-  * [Using "direct" permissions](#using-direct-permissions-see-below-to-use-both-roles-and-permissions)
-  * [Using permissions via roles](#using-permissions-via-roles)
-  * [Using Blade directives](#using-blade-directives)
-  * [Using multiple guards](#using-multiple-guards)
-  * [Using a middleware](#using-a-middleware)
-  * [Using artisan commands](#using-artisan-commands)
-* [Unit Testing](#unit-testing)
-* [Database Seeding](#database-seeding)
-* [Extending](#extending)
-* [Cache](#cache)
+Node dependencies
+* libtool
+* automake
+* autoconfnasm
+* libpng-dev
 
-<p align="center"><img src="https://laravel.com/assets/img/components/logo-laravel.svg"></p>
+[Image optimizer dependecies](https://github.com/spatie/image-optimizer#optimization-tools)
+* JpegOptim
+* Optipng
+* Pngquant 2
+* SVGO
+* Gifsicle
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/d/total.svg" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/v/stable.svg" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
-</p>
+## First Deploy
+1. Setup deploy ssh keys at gitlab project configuration.
+2. [Install composer](https://getcomposer.org/download/) and [Setup globally](https://getcomposer.org/doc/00-intro.md#globally)
+3. `git clone git@dev.fasttracknet.es:netsales/kami/webapp.git kami-webapp`
+4. `cd kami-webapp`
+5. `cp .env.example .env` and setup .env with correct values.
+6. `composer install --no-dev`
+7. `php artisan migrate` will populate database
+8. `npm install` will install front dependencies
+9. `npm run prod` will generate front assets
 
-## About Laravel
+## MySql considerations
+You must create database (for example kami) to configure .env
+All charset are `utf8` and collations `utf8_unicode_ci` so use default charset according to this.
+```sql
+CREATE SCHEMA `kami` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
+```
+### First time database populate
+The application has a few sync processes to copy data from CRM database to Kami database. The first deploy need to run this commands manually to avoid waiting until sync time.
+```bash
+php artisan crm:sync:categories
+php artisan crm:sync:age-ranges
+php artisan crm:sync:phone-operators
+php artisan crm:sync:internet-providers
+php artisan crm:sync:subdivision-level2
+php artisan crm:sync:creative-types
+```
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
+## Update & deploy
+```bash
+cd /path-to-your-project/
+```
+As we have the project deployed as nginx we need to switch to nginx user (this user also has the deploy key configured at git server)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+sudo -Hu nginx bash
+```
+Now we are at proyect root path and we are the right user
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications.
+```bash
+git pull origin master && composer install --no-dev && php artisan migrate && npm install && npm run prod
+```
 
-## Learning Laravel
+## Supervisor
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of any modern web application framework, making it a breeze to get started learning the framework.
+## Crontab
+You must call [laravel task schreduler](https://laravel.com/docs/5.5/scheduling)
+```
+* * * * * php /path-to-your-project/artisan schedule:run >> /dev/null 2>&1
+```
 
-If you're not in the mood to read, [Laracasts](https://laracasts.com) contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, JavaScript, and more. Boost the skill level of yourself and your entire team by digging into our comprehensive video library.
+## Useful commands
+To configure a domain (only godaddy provider)
+```bash
+php artisan domains:configure domain
+```
+Where domain is the complete domain name with tld (for example netsales.es).
 
-## Laravel Sponsors
+You must run the command are kami root folder.
 
-We would like to extend our thanks to the following sponsors for helping fund on-going Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell):
+# Nginx configuration
+Initial Setup will be something like this
+```nginx
+server {
+    listen 80;
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Pulse Storm](http://www.pulsestorm.net/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
+    root /var/www/myapp/public;
 
-## Contributing
+    index index.php;
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    server_name kami.netsales.es;
 
-## Security Vulnerabilities
+    location / {
+        try_files $uri $uri/ /index.php$is_args$args;
+    }
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    location ~ \.php$ {
+       include snippets/fastcgi-php.conf;
+       fastcgi_pass unix:/var/run/php/php7.1-fpm.sock;
+    }
+}
+```
 
-## License
+# Run tests
+At project folder run `vendor/phpunit/phpunit/phpunit`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### A Netsales Product (c) 2017
