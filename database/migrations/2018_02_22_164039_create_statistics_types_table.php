@@ -22,9 +22,9 @@ class CreateStatisticsTypesTable extends Migration
         DB::table('statistics_types')->insert([
 			['id' => 1, 'type' => 'number','layout'=>'<div class="col-md-3 col-sm-6 col-xs-12">
             <div class="info-box">
-              <span class="info-box-icon bg-[[COLOR]]"><i class="[[ICON]]]"></i></span>
+              <span class="info-box-icon bg-[[COLOR]]"><i class="[[ICON]]"></i></span>
               <div class="info-box-content">
-                <span class="info-box-text">[[LABEL]]]</span>
+                <span class="info-box-text">[[LABEL]]</span>
                 <span class="info-box-number">[[NUMBER]]<small></small></span>
               </div>
               <!-- /.info-box-content -->

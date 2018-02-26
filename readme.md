@@ -40,8 +40,8 @@ Node dependencies
 ## First Deploy
 1. Setup deploy ssh keys at gitlab project configuration.
 2. [Install composer](https://getcomposer.org/download/) and [Setup globally](https://getcomposer.org/doc/00-intro.md#globally)
-3. `git clone git@dev.fasttracknet.es:netsales/kami/webapp.git kami-webapp`
-4. `cd kami-webapp`
+3. `git clone git@dev.fasttracknet.es:netsales/crm/lrv-crm-api.git lrv-crm-api`
+4. `cd lrv-crm-api`
 5. `cp .env.example .env` and setup .env with correct values.
 6. `composer install --no-dev`
 7. `php artisan migrate` will populate database
@@ -49,11 +49,16 @@ Node dependencies
 9. `npm run prod` will generate front assets
 
 ## MySql considerations
-You must create database (for example kami) to configure .env
+This api uses 3 DB Schemas. Just the first one must be created with name crm-api
+You must create database  to configure .env
 All charset are `utf8` and collations `utf8_unicode_ci` so use default charset according to this.
 ```sql
-CREATE SCHEMA `kami` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
+CREATE SCHEMA `crm-api` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 ```
+
+
+
+
 ### First time database populate
 The application has a few sync processes to copy data from CRM database to Kami database. The first deploy need to run this commands manually to avoid waiting until sync time.
 ```bash
@@ -63,6 +68,13 @@ php artisan crm:sync:phone-operators
 php artisan crm:sync:internet-providers
 php artisan crm:sync:subdivision-level2
 php artisan crm:sync:creative-types
+```
+
+## Grant Api Access
+For accesing the Apis, the library Passport must be installed (not only with composer). So follow the next step:
+
+```bash
+php artisan passport:install
 ```
 
 ## Update & deploy
