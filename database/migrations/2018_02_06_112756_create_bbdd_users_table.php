@@ -29,6 +29,6 @@ class CreateBbddUsersTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('bbdd_users');
+        Schema::connection('segmentation')->dropIfExists('bbdd_users');
     }
 }
