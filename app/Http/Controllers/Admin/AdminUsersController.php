@@ -57,13 +57,35 @@ class AdminUsersController extends Controller
     {
         $status = 'success';
 
+
+//Cogemos los roles y vemos si existe un SuperAdmin. Si existe, para hacerlo debe ser SuperAdmin el que inserte el dato
+        $arrRoles = $request->get('roles');
+        $isSuperAdmin = false;
+        foreach ($arrRoles as $role) {
+            if ($role == 'SuperAdmin') {
+                $isSuperAdmin = true;
+                break;
+            }
+        }
+
+        
+        //if ($user->email == env('APP_GOD') || $userAuth->hasRole('SuperAdmin'))
+        if ($isSuperAdmin) {
+            $userAuth = Auth::user();
+            if (!($userAuth->hasRole('SuperAdmin'))) {
+                $status = 'error';
+                $msg = 'Only SuperAdmin can assign or create SuperAdmin Roles to new Users';
+                return redirect()->route('AdminUsersList')->with('status', $status)->with('msg', $msg);
+            }
+        //if ($user->email == env('APP_GOD') || $userAuth->hasRole('SuperAdmin'))
+        }
+
         $user = new User();
         $user->name = ucwords(trim($request->get('name')));
         $user->email = strtolower(trim($request->get('email')));
         $user->password = bcrypt($request->get('password'));
         $user->active = (bool)$request->get('active');
         $user->save();
-        $arrRoles = $request->get('roles');
         foreach ($arrRoles as $role) {
             $user->assignRole($role);
         }
@@ -85,7 +107,7 @@ class AdminUsersController extends Controller
         
         //Con disablednos aseguramos que el usuario principal no sea eliminado
         $arrDisabled = [];
-        if ($user->email == env('APP_GOD') || !$this->__canRemoveSuperAdmin($user)) {
+        if (!$this->__canRemoveSuperAdmin($user)) {
             $arrDisabled = ['disabled' => 'disabled'];
         }
         return view('admin.users.userForm', ['userData' => $user, 'userRoles' => $user->getRoleNames(), 'roles' => $this->__getRoles(), 'disableAttr' => $arrDisabled]);

@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\User;
 use Illuminate\Support\Facades\Auth;
 use Validator;
-use Carbon\Carbon;
+//use Carbon\Carbon;
 
 class PassportController extends Controller
 {
@@ -26,9 +26,10 @@ class PassportController extends Controller
             $success['token'] = $token;
             
             $fromSwagger = $request->get('grant_type') == 'password';
-            //Actualizamos su último loggeo
-            $user->last_logged_at = Carbon::now()->format('Y-m-d H:i:s');
-            $user->save();
+            //Actualizamos su último loggeo.
+            //Lo quitamos, ya que se hace en el Listener/UserEventSubscriber
+            /* $user->last_logged_at = Carbon::now()->format('Y-m-d H:i:s');
+            $user->save(); */
             if ($fromSwagger)
                 return response()->json([$token]);
             return response()->json(['sucess' => $success], $this->successStatus);

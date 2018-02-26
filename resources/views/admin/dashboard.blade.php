@@ -1,6 +1,6 @@
  @extends('adminlte::page')
 
-@section('title', 'Registros')
+@section('title', 'Dashborad')
 
 @section('content_header')
 <h1>Dashboard</h1>
@@ -8,63 +8,73 @@
 
 @section('content')
 
- <div class="row">
-        <div class="col-md-3 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-aqua"><i class="ion ion-ios-people-outline"></i></span>
+@if (isset($dashboard_top))
+  @foreach ($dashboard_top as $rows)
+  <div class="row">
+     @foreach ($rows as $item)
+     {!! $item !!} 
+     @endforeach  
+  </div>
+  @endforeach
+@endif
 
-            <div class="info-box-content">
-              <span class="info-box-text">Users</span>
-              <span class="info-box-number">{{ number($counters['users']) }}<small></small></span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
+  @if (isset($charts))
+  <div class="box box-default">
+      
+   
+    @foreach ($charts as $rows)
+        <div class="row">
+            @foreach ($rows as $chart)
+              <div class="col-md-4">
+                  <div id="{{ $chart['name'] }}"></div>
+              </div>
+            @endforeach
+
         </div>
-        <!-- /.col -->
-        <div class="col-md-3 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-red"><i class="ion-ios-personadd-outline"></i></span>
-
-            <div class="info-box-content">
-              <span class="info-box-text">Openers</span>
-              <span class="info-box-number">{{ number($counters['openers']) }}</span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
-
-        <!-- fix for small devices only -->
-        <div class="clearfix visible-sm-block"></div>
-
-        <div class="col-md-3 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-green"><i class="ion ion-thumbsup"></i></span>
-
-            <div class="info-box-content">
-              <span class="info-box-text">Clickers</span>
-              <span class="info-box-number">{{ number($counters['clickers']) }}</span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
-        <div class="col-md-3 col-sm-6 col-xs-12">
-          <div class="info-box">
-            <span class="info-box-icon bg-yellow"><i class="ion ion-ios-cart-outline"></i></span>
-
-            <div class="info-box-content">
-              <span class="info-box-text">Purchasers</span>
-              <span class="info-box-number">{{ number($counters['purchasers']) }}</span>
-            </div>
-            <!-- /.info-box-content -->
-          </div>
-          <!-- /.info-box -->
-        </div>
-        <!-- /.col -->
+    @endforeach
       </div>
-      <!-- /.row -->
+  @endif
+
+
+
+
+    
+      @stop
+
+      @section('js');
+<script src="https://unpkg.com/frappe-charts@0.0.8/dist/frappe-charts.min.iife.js"></script>
+<script>
+ // Javascript Graphs
+
+ @if (isset($charts))
+    @foreach ($charts as $rows)
+        @foreach ($rows as $chart)
+          let {!! $chart['name'] !!} = {
+            labels: [{!! $chart['graphLabel'] !!}],
+          
+            datasets: [{
+title: '{{ $chart['label'] }}',values: [{!! $chart['graphData'] !!}]
+            }]
+           
+          };
+          let chart{!! $chart['name'] !!} = new Chart({
+            parent: "#{{ $chart['name'] }}", // or a DOM element
+            title: '{{ $chart['label'] }}',
+            data: {!! $chart['name'] !!},
+            type: "{{ $chart['type'] }}",
+            height: 250,
+            colors:[ {!! $chart['colour'] !!} ],
+            format_tooltip_x: d => (d + '').toUpperCase(),
+            format_tooltip_y: d => d + ' pts'
+          });
+        @endforeach
+    @endforeach
+ @endif
+
+
+
+
+
+
+</script>
       @stop

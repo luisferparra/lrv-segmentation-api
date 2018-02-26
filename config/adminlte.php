@@ -115,6 +115,11 @@ return [
 			'url' => 'admin/fields',
 			'icon' => 'server',
 		],
+		[
+			'text' => 'Users and Profiles',
+			'url' => 'admin/users',
+			'icon' => 'user',
+		],
 		'ACCOUNT SETTINGS',
 		[
 			'text' => 'Users and Profiles',
@@ -148,7 +153,7 @@ return [
 							'submenu' => [
 								[
 									'text' => 'Level Three',
-									'url' => '#',
+									'url' => 'admin/users',
 								],
 								[
 									'text' => 'Level Three',

@@ -65,7 +65,7 @@
                                         <td>
                                             @if(!is_null($datum->updated_at)) {{$datum->updated_at->format('Y-m-d')}} @endif
                                         </td>
-                                        <td> @if(!is_null($datum->last_logged_at)) {{$datum->last_logged_at->format('Y-m-d')}} @endif</td>
+                                        <td> @if(!is_null($datum->last_logged_at))  {{$datum->last_logged_at}} @endif</td>
                                         <td>
                                 
                                                 <a href="{{route('AdminUserEdit',['userid'=>$datum->id])}}" title="Edit">
