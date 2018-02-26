@@ -131,6 +131,6 @@ class CreateBbddListsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('bbdd_lists');
+        Schema::connection('segmentation')->dropIfExists('bbdd_lists');
     }
 }
