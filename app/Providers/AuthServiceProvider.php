@@ -26,8 +26,13 @@ class AuthServiceProvider extends ServiceProvider
     public function boot()
     {
        
-        
+        $role = []; 
+     try {
         $role = Role::all();//user->getRoleNames(); 
+     } catch (\Throwable $t) {
+
+     }
+        
         $roles = [];
         foreach ($role as $k => $v) {
             # code...
