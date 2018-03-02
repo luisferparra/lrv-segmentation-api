@@ -59,16 +59,6 @@ CREATE SCHEMA `crm-api` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 
 
 
-### First time database populate
-The application has a few sync processes to copy data from CRM database to Kami database. The first deploy need to run this commands manually to avoid waiting until sync time.
-```bash
-php artisan crm:sync:categories
-php artisan crm:sync:age-ranges
-php artisan crm:sync:phone-operators
-php artisan crm:sync:internet-providers
-php artisan crm:sync:subdivision-level2
-php artisan crm:sync:creative-types
-```
 
 ## Grant Api Access
 For accesing the Apis, the library Passport must be installed (not only with composer). So follow the next step:
