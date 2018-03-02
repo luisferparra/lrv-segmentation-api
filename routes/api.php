@@ -69,6 +69,7 @@ Route::post('register','ApiAuth\PassportController@register');
 Route::group(['middleware'=>'auth:api'],function() {
 	Route::post('get-details','ApiAuth\PassportController@getDetails');
 });
-Route::middleware('auth:api')->get('/users', function (Request $request) {
+
+/* Route::middleware('auth:api')->get('/users', function (Request $request) {
 	return $request->user();
-});
+}); */

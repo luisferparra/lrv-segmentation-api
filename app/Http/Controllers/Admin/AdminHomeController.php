@@ -15,6 +15,16 @@ class AdminHomeController extends Controller
 	 * Arrayquecontiene el número máximo de elementos según el campo statisctis_displays_id
 	 */
 	const itemsTop = [1 => 4];
+
+/**
+ * ruta home de entrada al site
+ *
+ * @return void
+ */
+public function home() {
+	return view('welcome');
+}
+
 	/**
 	 * 
 	 * DEPRECATED DEPRECATED DEPRECATED
