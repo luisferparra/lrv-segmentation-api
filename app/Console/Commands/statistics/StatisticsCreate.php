@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Comando que genera diariamente las estadísticas que se presentan en  distintos puntos del admin
  */
@@ -61,7 +62,13 @@ class StatisticsCreate extends Command
             switch ($statisticType) {
                 case 1:
                 //Numeric, solo es conteo
-                    $cont = DB::connection('segmentation')->table($table)->count();
+                    $obj = DB::connection('segmentation')->table($table);
+                    if ($tableType == 'bit')
+                        $cont = $obj->where('id_val', 1)->count();
+                        elseif ($tableType=='ignore') {
+                            $cont = $obj->distinct('id')->count('id');
+                        }
+                    
                     $save = Statistic::find($statisticId);
                     $save->data = $cont;
                     $save->updated_at = Carbon::now()->format('Y-m-d H:i:s');
@@ -70,10 +77,15 @@ class StatisticsCreate extends Command
                     break;
                 case 2:
                 case 3:
+                    /**
+                     * Lostipos 2 y 3 son de estadísticas.
+                     * Tipo 2: Gráfica Lineal
+                     * Tipo 3: Gráfica Donut
+                     */
                     if (empty($originalData)) {
                         $data = ['maxItems' => $this->numElementsStatsDefault, 'periodRenew' => 1, 'chartData' => []];
                     } else $data = json_decode($originalData, true);
-                    $chartData = json_decode($data['chartData'],true);
+                    $chartData = json_decode($data['chartData'], true);
                     $maxElements = $data['maxItems'];
                     $periodRenew = $data['periodRenew'];
                     if (empty($lastUpdate) || $this->___diffDays($lastUpdate) >= $periodRenew) {
@@ -81,7 +93,7 @@ class StatisticsCreate extends Command
                             array_shift($chartData);
                         }
                         $cont = DB::connection('segmentation')->table($table)->count();
-                      
+
                         $chartData[Carbon::now()->format('Y-m-d')] = number($cont);
                         $data['chartData'] = json_encode($chartData);
                         $save = Statistic::find($statisticId);
@@ -89,11 +101,7 @@ class StatisticsCreate extends Command
                         $save->updated_at = Carbon::now()->format('Y-m-d H:i:s');
                         $save->save();
                     }
-                    /**
-                     * Lostipos 2 y 3 son de estadísticas.
-                     * Tipo 2: Gráfica Lineal
-                     * Tipo 3: Gráfica Donut
-                     */
+
                     break;
 
                 default:

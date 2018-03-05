@@ -32,7 +32,7 @@ class Create0000TableControlsTable extends Migration {
 
 			['id' => 4, 'name' => 'P161', 'action' => 'ignore', 'description' => 'Platform161 Deprecated', 'api_name' => null, 'data_type_id' => 1, 'created_at' => Carbon::now()->format('Y-m-d H:i:s')],
 			['id' => 5, 'name' => 'id_channel', 'action' => 'ignore', 'description' => 'Identificador Usuario', 'api_name' => null, 'data_type_id' => 1, 'created_at' => Carbon::now()->format('Y-m-d H:i:s')],
-			['id' => 6, 'name' => 'bbdd_subscribed', 'action' => 'ignore', 'description' => 'BBDD Alta Usuario', 'api_name' => null, 'data_type_id' => 1, 'created_at' => Carbon::now()->format('Y-m-d H:i:s')],
+			['id' => 6, 'name' => 'bbdd_users', 'action' => 'ignore', 'description' => 'BBDD Alta Usuario', 'api_name' => null, 'data_type_id' => 1, 'created_at' => Carbon::now()->format('Y-m-d H:i:s')],
 			['id' => 7, 'name' => 'segmentation_util', 'action' => 'ignore', 'description' => 'Si el dato es útil', 'api_name' => null, 'data_type_id' => 1, 'created_at' => Carbon::now()->format('Y-m-d H:i:s')],
 
 		]);

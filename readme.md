@@ -61,6 +61,7 @@ The application has a few sync processes to copy data from CRM database to Kami 
 ```bash
 php artisan crm:sync:bbdd
 php artisan crm:syncInstall:users
+php artisan statistics:home:create
 ```
 
 
@@ -96,14 +97,15 @@ You must call [laravel task schreduler](https://laravel.com/docs/5.5/scheduling)
 * * * * * php /path-to-your-project/artisan schedule:run >> /dev/null 2>&1
 ```
 
-## Useful commands
-To configure a domain (only godaddy provider)
-```bash
-php artisan domains:configure domain
-```
-Where domain is the complete domain name with tld (for example netsales.es).
+## Cache
+It is highly recommended to Cache both Routes and Config. So, run the following artisan commands
 
-You must run the command are kami root folder.
+```bash
+php artisan route:cache
+php artisan config:cache
+```
+Notice that if any config file is modified or is added a new one, the cache creation must be re-executed.
+Same policy for Routes.
 
 # Nginx configuration
 Initial Setup will be something like this
