@@ -15,7 +15,7 @@ class CreateBbddListsTable extends Migration
     public function up()
     {
         Schema::connection('segmentation')->create('bbdd_lists', function (Blueprint $table) {
-            $table->integer('id')->primary();
+            $table->integer('id')->unsigned()->primary();
             $table->string('val',5)->unique();
             $table->boolean('active')->default(1)->index();
             $table->timestamps();

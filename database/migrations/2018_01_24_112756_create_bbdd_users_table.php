@@ -14,10 +14,10 @@ class CreateBbddUsersTable extends Migration
     public function up()
     {
         Schema::connection('segmentation')->create('bbdd_users', function (Blueprint $table) {
-            $table->integer('id')->unasigned();
-            $table->integer('id_val')->unasigned();
+            $table->integer('id')->unsigned();
+            $table->integer('id_val')->unsigned();
            // $table->foreign('id')->references('id')->on('bbdd_subscribers');
-            $table->foreign('id')->references('id')->on('bbdd_lists');
+            $table->foreign('id_val')->references('id')->on('bbdd_lists');
             $table->primary(['id', 'id_val']);
         });
     }

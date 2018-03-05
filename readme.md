@@ -56,6 +56,12 @@ All charset are `utf8` and collations `utf8_unicode_ci` so use default charset a
 CREATE SCHEMA `crm-api` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 ```
 
+### First time database populate
+The application has a few sync processes to copy data from CRM database to Kami database. The first deploy need to run this commands manually to avoid waiting until sync time.
+```bash
+php artisan crm:sync:bbdd
+php artisan crm:syncInstall:users
+```
 
 
 

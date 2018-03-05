@@ -22,8 +22,8 @@ class CreateDataLoadsTable extends Migration
             $table->longText('request');
             $table->longText('response')->nullable();
             $table->longText('response_errors')->nullable();
-            $table->integer('cont_input')->unassigned()->default(0);
-            $table->integer('cont_processed')->unassigned()->default(0);
+            $table->integer('cont_input')->unsigned()->default(0);
+            $table->integer('cont_processed')->unsigned()->default(0);
             $table->boolean('processed')->default(0)->index();
             $table->timestamp('processed_at')->nullable();
             $table->timestamps();

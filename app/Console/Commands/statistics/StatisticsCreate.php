@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Comando que genera diariamente las estadísticas que se presentan en  distintos puntos del admin
+ */
 namespace App\Console\Commands\statistics;
 
 use Illuminate\Console\Command;

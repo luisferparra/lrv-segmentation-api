@@ -19,8 +19,8 @@ class CreateBbddUsersBulkUnsubsTable extends Migration
     public function up()
     {
         Schema::connection('temp')->create('bbdd_users', function (Blueprint $table) {
-            $table->integer('id')->unasigned();
-            $table->integer('id_val')->unasigned()->index();
+            $table->integer('id')->unsigned();
+            $table->integer('id_val')->unsigned()->index();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->nullable();
             

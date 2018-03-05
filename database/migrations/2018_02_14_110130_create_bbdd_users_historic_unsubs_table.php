@@ -15,8 +15,8 @@ class CreateBbddUsersHistoricUnsubsTable extends Migration
     {
         
         Schema::connection('temp')->create('bbdd_users_historic_unsubs', function (Blueprint $table) {
-            $table->integer('id')->unasigned()->index();
-            $table->integer('id_val')->unasigned()->index();
+            $table->integer('id')->unsigned()->index();
+            $table->integer('id_val')->unsigned()->index();
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->timestamp('updated_at')->nullable();
             $table->primary(['id', 'id_val']);

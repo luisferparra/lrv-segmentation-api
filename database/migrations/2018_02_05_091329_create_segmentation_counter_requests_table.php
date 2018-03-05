@@ -15,7 +15,7 @@ class CreateSegmentationCounterRequestsTable extends Migration
     {
         Schema::create('segmentation_counter_requests', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('kid')->unasigned()->index()->default(0);
+            $table->integer('kid')->unsigned()->index()->default(0);
             $table->longText('request');
             $table->integer('user_id')->nullable()->unsigned()->index();
             $table->uuid('uuid_token')->unique();

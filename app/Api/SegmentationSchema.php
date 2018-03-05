@@ -92,7 +92,7 @@ class SegmentationSchema
     protected function __postCreateTableSystem_Bit($tableName)
     {
         Schema::connection('segmentation')->create($tableName, function ($table) {
-            $table->integer('id')->unasigned()->primary();
+            $table->integer('id')->unsigned()->primary();
             $table->boolean('id_val')->index();
 
             //$table->primary(['id']);
@@ -100,9 +100,9 @@ class SegmentationSchema
 
         });
         Schema::connection('temp')->create($tableName, function ($table) {
-            $table->integer('id')->unasigned()->primary();
+            $table->integer('id')->unsigned()->primary();
             $table->boolean('id_val')->index();
-            //$table->integer('bbdd_id')->unasigned->index();
+            //$table->integer('bbdd_id')->unsigned->index();
 
             //$table->primary(['id']);
             
@@ -155,7 +155,7 @@ class SegmentationSchema
         if (!$this->inEdition || ($this->inEdition && !$existsTable)) {
 
             Schema::connection('segmentation')->create($tableName, function ($table) use ($tableNameVals) {
-                $table->integer('id')->unasigned();
+                $table->integer('id')->unsigned();
                 $table->integer('id_val')->index();
 
                 $table->primary(['id', 'id_val']);
@@ -166,7 +166,7 @@ class SegmentationSchema
             });
             //creamos también su réplica en temporal
             Schema::connection('temp')->create($tableName, function ($table){
-                $table->integer('id')->unasigned();
+                $table->integer('id')->unsigned();
                 $table->integer('id_val')->index();
                 
                 $table->primary(['id', 'id_val']);
