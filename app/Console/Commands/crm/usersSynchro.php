@@ -17,7 +17,7 @@ class usersSynchro extends Command
      *
      * @var string
      */
-    protected $signature = 'crm:syncInstall:users';
+    protected $signature = 'crm:preload:users';
 
     /**
      * The console command description.
@@ -48,7 +48,7 @@ class usersSynchro extends Command
         
 
 //Cogemos el listado de BBDDs activas
-$this->warn(" Este proceso llevará bastante tiempo... puedes ir a tomar un café ");
+        $this->warn(" Este proceso llevará bastante tiempo... puedes ir a tomar un café ");
         $bbddListTmp = DB::connection('segmentation')->table('bbdd_lists')->where('active', 1)->select(['id', 'val'])->get();
         $arrBbdd = [];
         foreach ($bbddListTmp as $bbdd) {
@@ -62,14 +62,14 @@ $this->warn(" Este proceso llevará bastante tiempo... puedes ir a tomar un caf�
         //primero contamos para el progreess bar cuantos elementos existen
         $cont = DB::connection('crm')->table('mark_tracking_new')->where('segmentation_util', 1)->count();
         //$cont = 12000;
-        $blocks = ceil($cont/$thressHold);
+        $blocks = ceil($cont / $thressHold);
         $bar = $this->output->createProgressBar($blocks);
         $sql = "SELECT id_channel,bbdd_subscribed,(marketing_opener+0) as opener,(MARKETING_CLICKER + 0) as clicker, (MARKETING_PURCHASER +0) as purchaser FROM mark_tracking_new WHERE segmentation_util=b'1' and id_channel>0 limit $cont";
         $db = DB::connection('crm')->getPdo();
         $query = $db->prepare($sql);
         $query->execute();
         $this->warn(" Información Traida. Procesamos e Insertamos... Tómate otro café");
-        
+
         $counter = 0;
         $arrUser = [];
         $arrOpens = [];
@@ -80,7 +80,7 @@ $this->warn(" Este proceso llevará bastante tiempo... puedes ir a tomar un caf�
             $id = $item['id_channel'];
             /* if ($id=='4107')
                 $this->info('Paramos'); */
-                $inserted = false;
+            $inserted = false;
             $bbddList = explode(',', trim($item['bbdd_subscribed']));
             foreach ($bbddList as $bbdd) {
                 if (array_key_exists($bbdd, $arrBbdd)) {
@@ -112,29 +112,29 @@ $this->warn(" Este proceso llevará bastante tiempo... puedes ir a tomar un caf�
                 $arrOpens = [];
                 $arrClickers = [];
                 $arrPurchasers = [];
-                $blocksCurrent ++;
-                
-            $bar->advance();
-                
+                $blocksCurrent++;
+
+                $bar->advance();
+
             }
 
         }
-/**
- * Puede que tengamos datos que no hayamos insertado, del último bloque 
- */
+        /**
+         * Puede que tengamos datos que no hayamos insertado, del último bloque 
+         */
         if (!empty($arrUser)) {
             DB::connection('segmentation')->table('bbdd_users')->insertOnDuplicateKey($arrUser, ['id_val']);
-            
+
         }
         if (!empty($arrOpens)) {
-            DB::connection('segmentation')->table('marketing_openers')->insertOnDuplicateKey($arrOpens, ['id_val']);          
+            DB::connection('segmentation')->table('marketing_openers')->insertOnDuplicateKey($arrOpens, ['id_val']);
         }
         if (!empty($arrClickers)) {
             DB::connection('segmentation')->table('marketing_clickers')->insertOnDuplicateKey($arrClickers, ['id_val']);
-                     
+
         }
         if (!empty($arrPurchasers)) {
-            DB::connection('segmentation')->table('marketing_purchasers')->insertOnDuplicateKey($arrPurchasers, ['id_val']);         
+            DB::connection('segmentation')->table('marketing_purchasers')->insertOnDuplicateKey($arrPurchasers, ['id_val']);
         }
         $bar->finish();
         $this->info(' Finished ');

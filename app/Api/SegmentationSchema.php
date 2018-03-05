@@ -156,7 +156,7 @@ class SegmentationSchema
 
             Schema::connection('segmentation')->create($tableName, function ($table) use ($tableNameVals) {
                 $table->integer('id')->unsigned();
-                $table->integer('id_val')->index();
+                $table->integer('id_val')->unsigned()->index();
 
                 $table->primary(['id', 'id_val']);
                 $table->foreign('id')->references('id')->on('bbdd_users');
@@ -167,7 +167,7 @@ class SegmentationSchema
             //creamos también su réplica en temporal
             Schema::connection('temp')->create($tableName, function ($table){
                 $table->integer('id')->unsigned();
-                $table->integer('id_val')->index();
+                $table->integer('id_val')->unsigned()->index();
                 
                 $table->primary(['id', 'id_val']);
                 

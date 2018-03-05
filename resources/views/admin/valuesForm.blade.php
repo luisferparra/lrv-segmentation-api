@@ -7,7 +7,7 @@
 <div class="alert alert-{{ session('status') }}">
     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button> {{ session('msg') }}
 </div>
-@endif {!! Form::open(['route' =>  'AdminValuesNewPost'])
+@endif {!! Form::open(['route' =>  ['AdminValuesNew',4]])
 !!}
 
 <div class="row">

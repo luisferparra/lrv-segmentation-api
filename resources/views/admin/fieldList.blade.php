@@ -77,11 +77,13 @@
                                         <i class="fa fa-edit"></i>
                                     </button>
                                 </a>
+                                @if ($datum->action=='normal')
                                 <a href="{{route('AdminValuesIndex',['tableControl'=>$datum->id])}}">
                                         <button type="button" class="btn btn-info">
                                             <i class="fa fa-bar-chart"></i>
                                         </button>
                                     </a>
+                                    @endif
                                     {{ Form::bsConfirmIcon(route('AdminFieldsRemove',['tableControl'=>$datum->id]),'remove')}}
                                 
                             </td>

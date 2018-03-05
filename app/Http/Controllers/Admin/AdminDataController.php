@@ -293,9 +293,13 @@ class AdminDataController extends Controller
 
 	public function valuesEdit(AaaaTableControl $tableControl, $valueId)
 	{
+		
 		$table = $tableControl->name;
 		$tableVals = $table . $this->__getTablePostfix();
-		$data = DB::connection('segmentation')->table($tableVals)->findOrFail($valueId);
+		$data = DB::connection('segmentation')->table($tableVals)->find($valueId);
+		if (is_null($data)) {
+			return abort(404);
+		}
 
 		return view('admin.valuesForm', ['data' => $data, 'tableControlId' => $tableControl->id, 'valId' => $valueId]);
 	}
