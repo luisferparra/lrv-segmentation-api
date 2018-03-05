@@ -65,10 +65,10 @@ class StatisticsCreate extends Command
                     $obj = DB::connection('segmentation')->table($table);
                     if ($tableType == 'bit')
                         $cont = $obj->where('id_val', 1)->count();
-                        elseif ($tableType=='ignore') {
-                            $cont = $obj->distinct('id')->count('id');
-                        }
-                    
+                    elseif ($tableType == 'ignore') {
+                        $cont = $obj->distinct('id')->count('id');
+                    }
+
                     $save = Statistic::find($statisticId);
                     $save->data = $cont;
                     $save->updated_at = Carbon::now()->format('Y-m-d H:i:s');
