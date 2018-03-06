@@ -7,8 +7,7 @@
 <div class="alert alert-{{ session('status') }}">
     <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button> {{ session('msg') }}
 </div>
-@endif {!! Form::open(['route' =>  ['AdminValuesNew',4]])
-!!}
+@endif {!! Form::open(['route' =>  (!isset($valId)) ? ['AdminValuesNewPost', $tableControlId]: ['AdminValuesEditPost',$tableControlId,$valId]]) !!}
 
 <div class="row">
     <div class="col-md-7">
@@ -19,14 +18,14 @@
             <!-- /.box-header -->
             <!-- form start -->
             <div class="box-body">
-                {!! Form::bsInputText('val_crm','Value at CRM',null,['placeholder'=>'Value at CRM']) !!}
-                {!! Form::bsInputText('val_normalized','Front Value',null,['placeholder'=>'Front Value']) !!}
+                {!! Form::bsInputText('val_crm','Value at CRM',(!isset($valId)) ? null : $data->val_crm,['placeholder'=>'Value at CRM']) !!}
+                {!! Form::bsInputText('val_normalized','Front Value',(!isset($valId)) ? null : $data->val_normalized,['placeholder'=>'Front Value']) !!}
 
 
             </div>
             <!-- /.box-body -->
             <div class="box-footer">
-                {!! Form::bsSubmit(route('AdminValuesNewPost',[]),'Insert',['class'=>'btn btn-primary']) !!}
+                {!! Form::bsSubmit((!isset($valId)) ? 'Insert' : 'Update',['class'=>'btn btn-primary']) !!}
             </div>
         </div>
     </div>

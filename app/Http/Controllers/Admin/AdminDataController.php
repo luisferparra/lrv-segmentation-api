@@ -303,9 +303,45 @@ class AdminDataController extends Controller
 
 		return view('admin.valuesForm', ['data' => $data, 'tableControlId' => $tableControl->id, 'valId' => $valueId]);
 	}
-
-	public function valuesNewInsert(RequestNewValueTables $request)
+/**
+ * Fuincón pública que inserta un nuevo valor en una tabla referencial de valores
+ *
+ * @param RequestNewValueTables $request
+ * @return void
+ */
+	public function valuesNewInsert(AaaaTableControl $tableControl,RequestNewValueTables $request)
 	{
+		$val_crm = trim($request->get('val_crm'));
+		$val_normalized = trim($request->get('val_normalized'));
+		//Cogemos de qué tabla se trata de $tableControl
+		$table = $tableControl->name.config('api-crm.table_val_postfix');
+		//Buscamos si existe el elemento... si no, devolvemos un error y fuera
+		$exists = (DB::connection('segmentation')->table($table)->find($idValue)!==null);
+		if (!$exists)
+			return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'error')->with('msg', 'Value not found');
+			//Chequeamos que no existtan ya los datos ya que deben ser únicos
+		if (DB::connection('segmentation')->table($table)->where('val_crm',$val_crm)->orWhere('val_normalized',$val_normalized)->count()>0)
+			return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'error')->with('msg', 'Both values must be unique');
+			
+		DB::connection('segmentation')->table($table)->insert(["val_crm"=>$val_crm,"val_normalized"=>$val_normalized]);
+		return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'success')->with('msg', 'Data Inserted Correctly');
+			
+	}
+
+	public function valuesEditPost(AaaaTableControl $tableControl,$idValue,RequestNewValueTables $request) {
+		
+		$val_crm = trim($request->get('val_crm'));
+		$val_normalized = trim($request->get('val_normalized'));
+		//Cogemos de qué tabla se trata de $tableControl
+		$table = $tableControl->name.config('api-crm.table_val_postfix');
+		//Buscamos si existe el elemento... si no, devolvemos un error y fuera
+		$exists = (DB::connection('segmentation')->table($table)->find($idValue)!==null);
+		if (!$exists)
+			return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'error')->with('msg', 'Value not found');
+		DB::connection('segmentation')->table($table)->where('id',$idValue)->update(["val_crm"=>$val_crm,"val_normalized"=>$val_normalized]);
+		return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'success')->with('msg', 'Data Updated Correctly');
+
+		
 		dd($request);
 	}
 }

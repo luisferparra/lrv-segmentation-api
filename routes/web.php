@@ -39,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
 	Route::post('/admin/segmentation-data/{tableControl}/new/', 'Admin\AdminDataController@valuesNewInsert')->name('AdminValuesNewPost');
 	
 	Route::get('/admin/segmentation-data/{tableControl}/edit/{valueId}', 'Admin\AdminDataController@valuesEdit')->where('tableControl', '[0-9]+')->where('valueId', '[0-9]+')->name('AdminValuesEdit');
+	Route::post('/admin/segmentation-data/{tableControl}/edit/{valueId}', 'Admin\AdminDataController@valuesEditPost')->where('tableControl', '[0-9]+')->where('valueId', '[0-9]+')->name('AdminValuesEditPost');
 
 	Route::get('/admin/users','Admin\AdminUsersController@show')->name('AdminUsersList');
 	Route::get('/admin/users/new','Admin\AdminUsersController@userNew')->name('AdminUsersNew');

@@ -13,7 +13,7 @@ class RequestNewValueTables extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,8 +24,8 @@ class RequestNewValueTables extends FormRequest
     public function rules()
     {
         return [
-			'val_crm' => array('required', 'regex:/[a-zA-Z ]+/', 'min:5', 'max:255', 'unique'),
-			'val_normalized' => array('required', 'regex:/[a-zA-Z ]+/', 'min:5', 'max:255', 'unique'),
+			'val_crm' => array('required', 'regex:/[a-zA-Z 0-9]+/', 'min:1', 'max:255'),
+			'val_normalized' => array('required', 'regex:/[a-zA-Z 0-9]+/', 'min:1', 'max:255'),
 
 		];
     }
