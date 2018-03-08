@@ -17,10 +17,14 @@
 {!! Form::open(['route' => (isset($tableControl)) ?['AdminFieldUpdatePost',$tableControl->id] : 'AdminFieldNewPost']) !!} 
 
 @php 
-$data_type_id = ''; $action_id=''; 
+$data_type_id = ''; $action_id=''; $crm_columns_id='';
 if ($errors->any()):
-$data_type_id = old('data_type_id'); $action_id = old('action'); else: if (isset($tableControl)): $data_type_id = $tableControl->data_type_id;
- endif; if (isset($tableControl)): $action_id = $tableControl->action; endif; endif; @endphp
+$data_type_id = old('data_type_id'); $action_id = old('action'); $crm_columns_id =old('crm_columns_id '); else: if (isset($tableControl)): $data_type_id = $tableControl->data_type_id;
+ endif; if (isset($tableControl)): $action_id = $tableControl->action; endif; 
+ if (isset($tableControl) && !empty($tableControl->crm_columns_id)): $crm_columns_id = $tableControl->crm_columns_id; endif;
+ endif; @endphp
+
+Aquí: {{ $crm_columns_id }}
 
 <div class="row">
     <div class="col-md-7">
@@ -68,6 +72,19 @@ $data_type_id = old('data_type_id'); $action_id = old('action'); else: if (isset
                                 <option value='{{$data_type->id}}' @if (!is_null($data_type_id) && isset($tableControl) && $data_type_id == $data_type->id) selected @endif>{{$data_type->name}}</option>
                                 @endforeach
                             </select> @if($errors->has('data_type_id')) <span class="help-block">{{$errors->get('data_type_id')[0]}}</span>@endif
+                </div>
+
+                @php $crm_columns_id = (empty($crm_columns_id)) ? '' : $crm_columns_id; @endphp
+                <div class="form-group @if($errors->has('crm_columns_id')) has-error @endif">
+                    <label>Crm Columns Associated</label><small>
+                        Only for synchro purposes
+                    </small>
+                    <select class="form-control" name='crm_columns_id' id='crm_columns_id'>
+                                <option></option>
+                                @foreach ($crm_columns as $crm_column)
+                                <option value='{{$crm_column->id}}' @if ((!is_null($crm_column) && !empty($crm_columns_id) && isset($tableControl) && $crm_columns_id == $crm_column->id)) selected @endif>{{$crm_column->column_front_name }} ({{$crm_column->column_name}})</option>
+                                @endforeach
+                            </select> @if($errors->has('crm_columns_id')) <span class="help-block">{{$errors->get('crm_columns_id')[0]}}</span>@endif
                 </div>
 
             </div>

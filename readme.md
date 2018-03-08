@@ -49,11 +49,14 @@ Node dependencies
 9. `npm run prod` will generate front assets
 
 ## MySql considerations
-This api uses 3 DB Schemas. Just the first one must be created with name crm-api
+This api uses 4 DB Schemas. All schemas must be created.
 You must create database  to configure .env
 All charset are `utf8` and collations `utf8_unicode_ci` so use default charset according to this.
 ```sql
 CREATE SCHEMA `crm-api` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
+CREATE SCHEMA `crm-api-segmentation` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
+CREATE SCHEMA `crm-api-temp` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
+CREATE SCHEMA `crm-data` DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci ;
 ```
 
 ### First time database populate
@@ -62,6 +65,7 @@ The application has a few sync processes to copy data from CRM database to Kami 
 php artisan crm:sync:bbdd
 php artisan crm:syncInstall:users
 php artisan statistics:home:create
+php artisan crm:sync:columns
 ```
 
 

@@ -118,9 +118,19 @@ class dataPreloadSynchro extends Command
 
 
             }
+           
+
+
+        } else {
+            //Los valors de referencia los cogemos de la tabla pixel_column_values
+            $crmRefDataObj = DB::connection('crm')->table('pixel_column_values')->where('id_column',$crmId)->orderBy('columna_value')->get();
+            foreach ($crmRefDataObj as $val) {
+                $arrValues[] = ['val_crm' => $val->columna_value, 'val_normalized' => $val->columna_value];
+            }
+        }
+        //los guardamos
+        if (!empty($arrValues)) {
             DB::connection('segmentation')->table($tableNameVals)->insertOnDuplicateKey($arrValues, ['val_crm', 'val_normalized']);
-
-
         }
         $this->warn(' Datos Referenciales Guardados ');
         //Aquí ya hemos cargado los datos en la tabla de valores. 

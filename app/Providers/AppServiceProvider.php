@@ -76,6 +76,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Api\SegmentationSchema::class, function ($app) {
             return new \App\Api\SegmentationSchema(config('api-crm.table_val_postfix'));
         });
+        $this->app->bind(\App\Admin\Stats\GetStat::class, function ($app) {
+            return new \App\Admin\Stats\GetStat();
+        });
         //$this->app->bind(\App\Api\SegmentationCounterInterface::class, \App\Api\SegmentationCounterV2::class);
         $this->app->bind(\App\Api\SegmentationCounterInterface::class, \App\Api\SegmentationCounter::class);
         

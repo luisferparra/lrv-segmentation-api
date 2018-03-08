@@ -55,6 +55,7 @@
                     </table>
                 </div>
                 <!-- /.box-body -->
+                
             </div>
             <!-- /.box -->
             <!-- -->
@@ -63,6 +64,7 @@
                     <button type=button class="btn btn-info pull-right-container">New Value in Table</button>
                 </a>
             </div>
+            
         </div>
         <div class="col-md-3 col-sm-6 col-xs-12">
                 <div class="info-box">
@@ -76,6 +78,26 @@
                 </div>
                 <!-- /.info-box -->
               </div>
+              @if (isset($charts))
+                @foreach ($charts as $chart)
+                    <div class="col-md-3 col-sm-6 col-xs-12">
+                            <div id="{{ $chart['name'] }}-2"></div>
+                    </div>
+                @endforeach
+              @endif
+             
+
+
+              <div class="col-xs-9">
+                    @if (isset($charts))
+                        @foreach ($charts as $chart)
+                            <div class="box">
+
+                                    <div class="result-stats" id="{{ $chart['name'] }}"></div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
     </div>
 
 
@@ -104,15 +126,73 @@
 @stop 
 @section('js')
 <!--  <script type="text/javascript" src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>-->
+
+<script src="https://unpkg.com/frappe-charts@0.0.8/dist/frappe-charts.min.iife.js"></script>
 <script>
+
+        
+
     $(function () {
+
+
+
+        
         $('#tableFieldList').DataTable();
         
                 $('#confirm').on('show.bs.modal', function (e) {
                     $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
                     $(this).find('.confirm-description').text($(e.relatedTarget).data('description'));
                 });
-            
-    })
+                    
+    });
+    @if (isset($charts))
+    @foreach ($charts as $chart)
+       
+          let {!! $chart['name'] !!} = {
+            labels: [{!! $chart['graphLabel'] !!}],
+          
+            datasets: [{
+title: '{{ $chart['label'] }}',values: [{!! $chart['graphData'] !!}]
+            }]
+           
+          };
+          let chart{!! $chart['name'] !!} = new Chart({
+            parent: "#{{ $chart['name'] }}", // or a DOM element
+            title: '{{ $chart['label'] }}',
+            data: {!! $chart['name'] !!},
+            type: "bar",//"{{ $chart['type'] }}",
+            height: 200,
+            colors:[ {!! $chart['colour'] !!} ],
+            format_tooltip_x: d => (d + '').toUpperCase(),
+            format_tooltip_y: d => d.toLocaleString(),
+            axisOptions: {
+                yAxisMode: 'span',   // Axis lines, default
+                xAxisMode: 'tick',   // No axis lines, only short ticks
+                xIsSeries: 30         // Allow skipping x values for space
+                                     // default: 0
+              }
+          });
+
+          let chart2{!! $chart['name'] !!} = new Chart({
+            parent: "#{{ $chart['name'] }}-2", // or a DOM element
+            title: '{{ $chart['label'] }}',
+            data: {!! $chart['name'] !!},
+            type: "pie",//"{{ $chart['type'] }}",
+            height: 250,
+            colors:[ {!! $chart['colour'] !!} ],
+            format_tooltip_x: d => (d + '').toUpperCase(),
+            format_tooltip_y: d =>  d.toLocaleString(),
+            axisOptions: {
+                yAxisMode: 'span',   // Axis lines, default
+                xAxisMode: 'tick',   // No axis lines, only short ticks
+                xIsSeries: 10         // Allow skipping x values for space
+                                     // default: 0
+              }
+          });
+       
+    @endforeach
+ @endif
+
+    
 </script>
 @stop

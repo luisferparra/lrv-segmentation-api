@@ -278,6 +278,9 @@ return [
 		    | These values will override those defined in the section above.
 		    |
 	*/
+	'crm-data'=>[
+		'connection' => true,
+	],
 
 	// 'shop' => [
 	//     'path' => app_path(),

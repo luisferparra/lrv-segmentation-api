@@ -14,6 +14,7 @@
         "laravel/passport": "^4.0.3",
         "laravel/tinker": "~1.0",
         "laravelcollective/html": "^5.4.0",
+        "predis/predis": "^1.1",
         "propaganistas/laravel-intl": "^1.2",
         "reliese/laravel": "^0.0.13",
         "spatie/laravel-permission": "^2.9",

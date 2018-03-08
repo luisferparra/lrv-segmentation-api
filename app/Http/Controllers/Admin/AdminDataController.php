@@ -7,9 +7,13 @@ use App\Http\Requests\Admin\RequestNewFieldTableControl;
 use App\Http\Requests\Admin\RequestNewValueTables;
 use App\Models\AaaaTableControl;
 use App\Models\DataType;
+use App\Models\Statistic;
 use App\Api\SegmentationSchema;
+
 use Schema;
 use DB;
+use App\Models\Base\StatisticsType;
+use App\Models\CrmColumn;
 
 /**
  * Controlador
@@ -34,7 +38,7 @@ class AdminDataController extends Controller
 	{
 	//parent::__construct();
 		$this->schema = $schema;
-		
+
 		$this->schema->setAllowCreateAndRemove(true);
 
 
@@ -112,8 +116,8 @@ class AdminDataController extends Controller
 			$totVals = DB::connection('segmentation')->table($tableNameVals)->count();
 		}
 		$data_type = DataType::all();
-
-		return view('admin.fieldForm', ['segmentationCount' => ['first' => ['num' => $totItems, 'label' => $labelItems], 'second' => ['num' => $totVals, 'label' => $labelVals]], 'data_types' => $data_type, 'tableControl' => $tableControl]);
+		$crmColumns = CrmColumn::select(['id','column_name','column_front_name'])->orderBy('column_front_name')->get();
+		return view('admin.fieldForm', ['segmentationCount' => ['first' => ['num' => $totItems, 'label' => $labelItems], 'second' => ['num' => $totVals, 'label' => $labelVals]], 'data_types' => $data_type, 'tableControl' => $tableControl	,'crm_columns'=>$crmColumns]);
 
 	}
 
@@ -136,9 +140,10 @@ class AdminDataController extends Controller
 
 		//cogremos ahora los referenciales que irán en el select
 		$data_type = DataType::all();
+		$crmColumns = CrmColumn::select(['id','column_name','column_front_name'])->orderBy('column_front_name')->get();
 		//$contUsers = DB::connection('segmentation')->table('email-domains')->count();
 		//$contItems = DB::connection('segmentation')->table('email-domains-vals')->count();
-		return view('admin.fieldForm', ['tableCount' => ['first' => ['num' => $tot, 'label' => 'Number of Segmentations'], 'second' => ['num' => implode(', ', $tmp), 'label' => 'Number of segmentations by data type']], 'data_types' => $data_type]);
+		return view('admin.fieldForm', ['tableCount' => ['first' => ['num' => $tot, 'label' => 'Number of Segmentations'], 'second' => ['num' => implode(', ', $tmp), 'label' => 'Number of segmentations by data type']], 'data_types' => $data_type,'crm_columns'=>$crmColumns]);
 	}
 
 
@@ -155,6 +160,9 @@ class AdminDataController extends Controller
 		$tableControl->description = ucwords(trim($request->get('description')));
 		$tableControl->api_name = str_slug(trim($request->get('api_name')));
 		$tableControl->data_type_id = $request->get('data_type_id');
+		if (!empty($request->get('crm_columns_id'))) {
+			$tableControl->crm_columns_id=$request->get('crm_columns_id');
+		}
 		$tableControl->save();
 		if (!$this->schema->postCreateTableSystem($name)) {
 			$status = 'error';
@@ -190,6 +198,9 @@ class AdminDataController extends Controller
 		$reg->description = ucwords(trim($request->get('description')));
 		$reg->api_name = str_slug(trim($request->get('api_name')));
 		$reg->data_type_id = $request->get('data_type_id');
+		if (!empty($request->get('crm_columns_id'))) {
+			$reg->crm_columns_id=$request->get('crm_columns_id');
+		}
 		$reg->save();
 		if (!$this->schema->postCreateTableSystem($name) || !$reg->id) {
 			$status = 'error';
@@ -279,8 +290,54 @@ class AdminDataController extends Controller
 		$tableVals = $table . $this->__getTablePostfix();
 		$contUsers = DB::connection('segmentation')->table($table)->count();
 		$dat = DB::connection('segmentation')->table($tableVals)->get();
-
-		return view('admin.valuesList', ['data' => $dat, 'cont' => $contUsers, 'tableControlId' => $tableControl->id])->with('section', $tableControl->description)->with('aaaa_table_controls_id', $tableControl->id)->with('tableName', $table);
+//Vemos a ver si hay alguna estadística y la plantamos
+		$statistics = Statistic::where('aaaa_table_controls_id', $tableControl->id)->where('active', true)->get();
+		$items = [];
+		foreach ($statistics as $datum) {
+			# code...
+			$type = $datum->statistics_types_id;
+			$statisticsTypesArr = StatisticsType::find($type);
+			$originalLayout = trim($statisticsTypesArr->layout);
+			$originalType = trim($statisticsTypesArr->type);
+			$label = trim($datum->label);
+			$data = trim($datum->data);
+			$colour = trim($datum->colour);
+			$icon = trim($datum->icon);
+			$id = $datum->id;
+			switch ($originalType) {
+				case 'number':
+					$currLayout = str_replace(['[[COLOR]]', '[[ICON]]', '[[LABEL]]', '[[NUMBER]]'], [$colour, $icon, $label, number($data)], $originalLayout);
+					$item[] = $currLayout;
+					break;
+				case 'graph-line':
+				case 'graph-column':
+				case 'graph-donut':
+				case 'graph-pie':
+				case 'graph-percentage':
+				case 'graph-bar':
+				$colours =   ['light-blue', 'blue', 'violet', 'red','orange', 'yellow', 'green', 'light-green', 'purple', 'magenta', 'grey', 'dark-grey'];
+					$tmpData = json_decode($data, true);
+					$item = [];
+					$item['name'] = 'graph' . $id;
+					$item['label'] = $label;
+					$item['type'] = str_replace('graph-','',$originalType);
+					$item['colour'] = "'".$colours[array_rand($colours)]."'";
+					$tmp = is_array($tmpData['chartData']) ? $tmpData['chartData'] : json_decode($tmpData['chartData'], true);
+					$t =array_keys($tmp);
+					array_walk($t, function(&$item) { $item = "'".$item."'"; });
+					$item['graphLabel'] = implode(',',$t);             
+					$item['graphData'] = implode(',',array_values($tmp));
+					
+					break;
+				default:
+					# code...
+					break;
+			}
+			$items[] = $item;
+			unset($item);
+			
+		}
+		return view('admin.valuesList', ['data' => $dat, 'cont' => $contUsers, 'tableControlId' => $tableControl->id,'charts'=>$items])->with('section', $tableControl->description)->with('aaaa_table_controls_id', $tableControl->id)->with('tableName', $table);
 	}
 
 
@@ -293,7 +350,7 @@ class AdminDataController extends Controller
 
 	public function valuesEdit(AaaaTableControl $tableControl, $valueId)
 	{
-		
+
 		$table = $tableControl->name;
 		$tableVals = $table . $this->__getTablePostfix();
 		$data = DB::connection('segmentation')->table($tableVals)->find($valueId);
@@ -303,45 +360,46 @@ class AdminDataController extends Controller
 
 		return view('admin.valuesForm', ['data' => $data, 'tableControlId' => $tableControl->id, 'valId' => $valueId]);
 	}
-/**
- * Fuincón pública que inserta un nuevo valor en una tabla referencial de valores
- *
- * @param RequestNewValueTables $request
- * @return void
- */
-	public function valuesNewInsert(AaaaTableControl $tableControl,RequestNewValueTables $request)
+	/**
+	 * Fuincón pública que inserta un nuevo valor en una tabla referencial de valores
+	 *
+	 * @param RequestNewValueTables $request
+	 * @return void
+	 */
+	public function valuesNewInsert(AaaaTableControl $tableControl, RequestNewValueTables $request)
 	{
 		$val_crm = trim($request->get('val_crm'));
 		$val_normalized = trim($request->get('val_normalized'));
 		//Cogemos de qué tabla se trata de $tableControl
-		$table = $tableControl->name.config('api-crm.table_val_postfix');
+		$table = $tableControl->name . config('api-crm.table_val_postfix');
 		//Buscamos si existe el elemento... si no, devolvemos un error y fuera
-		$exists = (DB::connection('segmentation')->table($table)->find($idValue)!==null);
+		$exists = (DB::connection('segmentation')->table($table)->find($idValue) !== null);
 		if (!$exists)
-			return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'error')->with('msg', 'Value not found');
+			return redirect()->route('AdminValuesIndex', $tableControl->id)->with('status', 'error')->with('msg', 'Value not found');
 			//Chequeamos que no existtan ya los datos ya que deben ser únicos
-		if (DB::connection('segmentation')->table($table)->where('val_crm',$val_crm)->orWhere('val_normalized',$val_normalized)->count()>0)
-			return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'error')->with('msg', 'Both values must be unique');
-			
-		DB::connection('segmentation')->table($table)->insert(["val_crm"=>$val_crm,"val_normalized"=>$val_normalized]);
-		return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'success')->with('msg', 'Data Inserted Correctly');
-			
+		if (DB::connection('segmentation')->table($table)->where('val_crm', $val_crm)->orWhere('val_normalized', $val_normalized)->count() > 0)
+			return redirect()->route('AdminValuesIndex', $tableControl->id)->with('status', 'error')->with('msg', 'Both values must be unique');
+
+		DB::connection('segmentation')->table($table)->insert(["val_crm" => $val_crm, "val_normalized" => $val_normalized]);
+		return redirect()->route('AdminValuesIndex', $tableControl->id)->with('status', 'success')->with('msg', 'Data Inserted Correctly');
+
 	}
 
-	public function valuesEditPost(AaaaTableControl $tableControl,$idValue,RequestNewValueTables $request) {
-		
+	public function valuesEditPost(AaaaTableControl $tableControl, $idValue, RequestNewValueTables $request)
+	{
+
 		$val_crm = trim($request->get('val_crm'));
 		$val_normalized = trim($request->get('val_normalized'));
 		//Cogemos de qué tabla se trata de $tableControl
-		$table = $tableControl->name.config('api-crm.table_val_postfix');
+		$table = $tableControl->name . config('api-crm.table_val_postfix');
 		//Buscamos si existe el elemento... si no, devolvemos un error y fuera
-		$exists = (DB::connection('segmentation')->table($table)->find($idValue)!==null);
+		$exists = (DB::connection('segmentation')->table($table)->find($idValue) !== null);
 		if (!$exists)
-			return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'error')->with('msg', 'Value not found');
-		DB::connection('segmentation')->table($table)->where('id',$idValue)->update(["val_crm"=>$val_crm,"val_normalized"=>$val_normalized]);
-		return redirect()->route('AdminValuesIndex',$tableControl->id)->with('status', 'success')->with('msg', 'Data Updated Correctly');
+			return redirect()->route('AdminValuesIndex', $tableControl->id)->with('status', 'error')->with('msg', 'Value not found');
+		DB::connection('segmentation')->table($table)->where('id', $idValue)->update(["val_crm" => $val_crm, "val_normalized" => $val_normalized]);
+		return redirect()->route('AdminValuesIndex', $tableControl->id)->with('status', 'success')->with('msg', 'Data Updated Correctly');
 
-		
+
 		dd($request);
 	}
 }

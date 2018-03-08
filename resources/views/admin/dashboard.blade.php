@@ -26,7 +26,7 @@
         <div class="row">
             @foreach ($rows as $chart)
               <div class="col-md-4">
-                  <div id="{{ $chart['name'] }}"></div>
+                  <div class="result-stats" id="{{ $chart['name'] }}"></div>
               </div>
             @endforeach
 
@@ -65,7 +65,13 @@ title: '{{ $chart['label'] }}',values: [{!! $chart['graphData'] !!}]
             height: 250,
             colors:[ {!! $chart['colour'] !!} ],
             format_tooltip_x: d => (d + '').toUpperCase(),
-            format_tooltip_y: d => d + ' pts'
+            format_tooltip_y: d => d.toLocaleString(),
+            axisOptions: {
+              yAxisMode: 'span',   // Axis lines, default
+              xAxisMode: 'tick',   // No axis lines, only short ticks
+              xIsSeries: 10         // Allow skipping x values for space
+                                   // default: 0
+            }
           });
         @endforeach
     @endforeach

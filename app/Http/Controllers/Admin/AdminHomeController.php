@@ -8,6 +8,7 @@ use DB;
 use App\Models\Statistic;
 use App\Models\StatisticsDisplay;
 use App\Models\StatisticsType;
+use App\Admin\Stats\GetStat;
 
 class AdminHomeController extends Controller
 {
@@ -75,14 +76,19 @@ public function home() {
 					$items[] = $currLayout;
 					break;
 				case 'graph-line':
+				case 'graph-column':
+				case 'graph-donut':
+				case 'graph-pie':
+				case 'graph-percentage':
+				case 'graph-bar':
 				$colours =   ['light-blue', 'blue', 'violet', 'red','orange', 'yellow', 'green', 'light-green', 'purple', 'magenta', 'grey', 'dark-grey'];
 					$tmpData = json_decode($data, true);
 					$item = [];
 					$item['name'] = 'graph' . $id;
 					$item['label'] = $label;
-					$item['type'] = 'line';
+					$item['type'] = str_replace('graph-','',$originalType);//str_replace('graph-','',$originalType);
 					$item['colour'] = "'".$colours[array_rand($colours)]."'";
-					$tmp = json_decode($tmpData['chartData'], true);
+					$tmp = is_array($tmpData['chartData']) ? $tmpData['chartData'] : json_decode($tmpData['chartData'], true);
 					$t =array_keys($tmp);
 					array_walk($t, function(&$item) { $item = "'".$item."'"; });
 					$item['graphLabel'] = implode(',',$t);             
@@ -113,11 +119,15 @@ public function home() {
 	 */
 	public function index()
 	{
+		/* $statCharts = new GetStat();
+		$statCharts->getStatsFromId(11); */
 		$statisticsDisplaysArr = StatisticsDisplay::find(1);
 		$displayType = trim($statisticsDisplaysArr->displayed_at);
 		//type,display
 		$numberDashboardTop = $this->__getStatistics(1, 1);
 		$charts = $this->__getStatistics(2, 1);
+		$charts2 = $this->__getStatistics(5,1);
+		$charts = array_merge($charts,$charts2);
 		$tmp = '{
 			title: "Some Data",
 			values: [25, 40, 30, 35, 8, 52, 17, -4]

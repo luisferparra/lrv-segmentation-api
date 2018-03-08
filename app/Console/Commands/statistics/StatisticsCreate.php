@@ -77,30 +77,60 @@ class StatisticsCreate extends Command
                     break;
                 case 2:
                 case 3:
+                case 5:
                     /**
                      * Lostipos 2 y 3 son de estadísticas.
                      * Tipo 2: Gráfica Lineal
                      * Tipo 3: Gráfica Donut
                      */
-                    if (empty($originalData)) {
-                        $data = ['maxItems' => $this->numElementsStatsDefault, 'periodRenew' => 1, 'chartData' => []];
-                    } else $data = json_decode($originalData, true);
-                    $chartData = json_decode($data['chartData'], true);
-                    $maxElements = $data['maxItems'];
-                    $periodRenew = $data['periodRenew'];
-                    if (empty($lastUpdate) || $this->___diffDays($lastUpdate) >= $periodRenew) {
-                        if (count($chartData) >= $maxElements) {
-                            array_shift($chartData);
-                        }
-                        $cont = DB::connection('segmentation')->table($table)->count();
+                    if ($tableType == 'bit' || $tableType=='ignore') {
+                        if (empty($originalData)) {
+                            $data = ['maxItems' => $this->numElementsStatsDefault, 'periodRenew' => 1, 'chartData' => []];
+                        } else $data = json_decode($originalData, true);
+                        $chartData = json_decode($data['chartData'], true);
+                        $maxElements = $data['maxItems'];
+                        $periodRenew = $data['periodRenew'];
+                        if (empty($lastUpdate) || $this->___diffDays($lastUpdate) >= $periodRenew) {
+                            if (count($chartData) >= $maxElements) {
+                                array_shift($chartData);
+                            }
+                            $cont = DB::connection('segmentation')->table($table)->count();
 
-                        $chartData[Carbon::now()->format('Y-m-d')] = number($cont);
-                        $data['chartData'] = json_encode($chartData);
+                            $chartData[Carbon::now()->format('Y-m-d')] = $cont;
+                            $data['chartData'] = json_encode($chartData);
+                            $save = Statistic::find($statisticId);
+                            $save->data = json_encode($data);
+                            $save->updated_at = Carbon::now()->format('Y-m-d H:i:s');
+                            $save->save();
+                        }
+                    } else {
+                            //Tipo de tabla de datos. 
+                            //Cogemos los datos, los calculamos y actualizmos su registro
+                        $tableVals = $table . config('api-crm.table_val_postfix');
+                            //Primero cogemos los datos
+                        $tmpVals = DB::connection('segmentation')->table($tableVals)->get();
+                        $arrVals = [];
+                        foreach ($tmpVals as $vals) {
+                            $arrVals[$vals->id] = trim($vals->val_normalized);
+                        }
+                        $chartData = [];
+                            //Ahora hacemos la query que traiga a todos los datos
+                        $segData = DB::connection('segmentation')->table($table)->select(DB::raw('count(id) as cont, id_val'))->groupBy('id_val')->get();
+                        foreach ($segData as $datum) {
+                            $cont = $datum->cont;
+                            $id = $datum->id_val;
+                            if ($cont>0) { //!empty($arrVals[$id])
+                                $chartData[$arrVals[$id]] = $cont;
+                            }
+                        }
+                        $data['chartData'] = $chartData;
                         $save = Statistic::find($statisticId);
                         $save->data = json_encode($data);
                         $save->updated_at = Carbon::now()->format('Y-m-d H:i:s');
                         $save->save();
                     }
+
+
 
                     break;
 

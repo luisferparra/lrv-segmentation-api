@@ -41,7 +41,8 @@ class RequestNewFieldTableControl extends FormRequest
 			'description' => ['required', 'regex:/[a-zA-Z ]+/', 'max:255', 'min:5'],
 			'api_name' => array('required', 'regex:/[a-zA-Z ]+/', 'min:5', 'max:255', $apiNameUniqueRule),
 			'data_type_id' => ['required', 'exists:data_types,id'],
-
+			'crm_columns_id'=>['nullable','numeric','exists:crm-data.crm_columns,id'],
+			
 		];
 	}
 }
