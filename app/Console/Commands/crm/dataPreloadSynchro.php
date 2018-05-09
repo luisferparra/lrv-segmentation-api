@@ -2,11 +2,14 @@
 
 /**
  * Comando que dado un id de aaatablecontrol y un nombre de campo del crm, trae los datos y los procesa
+ * @date 2018.03.13
+ *      Añadimos la inserción de datos en Redis
  */
 namespace App\Console\Commands\crm;
 
 use Illuminate\Console\Command;
 use DB;
+use Redis;
 use Carbon\Carbon;
 use App\Models\AaaaTableControl;
 
@@ -57,6 +60,8 @@ class dataPreloadSynchro extends Command
         $tableControlObj = AaaaTableControl::findOrFail($this->argument('tableControl'));
         $tableName = $tableControlObj->name;
         $tableNameVals = $tableName . config('api-crm.table_val_postfix');
+        $apiName = trim($tableControlObj->api_name);
+        $redisApiName = 'crm:' . $tableName . ':';
 
 
         /**
@@ -118,12 +123,12 @@ class dataPreloadSynchro extends Command
 
 
             }
-           
+
 
 
         } else {
             //Los valors de referencia los cogemos de la tabla pixel_column_values
-            $crmRefDataObj = DB::connection('crm')->table('pixel_column_values')->where('id_column',$crmId)->orderBy('columna_value')->get();
+            $crmRefDataObj = DB::connection('crm')->table('pixel_column_values')->where('id_column', $crmId)->orderBy('columna_value')->get();
             foreach ($crmRefDataObj as $val) {
                 $arrValues[] = ['val_crm' => $val->columna_value, 'val_normalized' => $val->columna_value];
             }
@@ -165,6 +170,7 @@ class dataPreloadSynchro extends Command
         /**
          * Recorremos los datos traídos para procesar
          */
+        $arrApisRedis = [];
         while ($item = $query->fetch()) {
             $id = $item['id_channel'];
 
@@ -183,7 +189,13 @@ class dataPreloadSynchro extends Command
             $valList = explode(',', trim($item['value']));
             foreach ($valList as $item) {
                 if (array_key_exists($item, $arrRefValues)) {
-                    $arrIns[] = ['id' => $id, 'id_val' => $arrRefValues[$item]];
+                    $id_val = $arrRefValues[$item];
+                    if (!array_key_exists($id_val, $arrApisRedis)) {
+                        $arrApisRedis[$id_val] = 1;
+                        ${'val_' . $id_val} = [];
+                    }
+                    $arrIns[] = ['id' => $id, 'id_val' => $id_val];
+                    ${'val_' . $id_val}[] = $id;
                     $inserted = true;
                 }
             }
@@ -194,6 +206,7 @@ class dataPreloadSynchro extends Command
 
             $counter++;
             if ($counter >= $thressHold) {
+
                 //DB::connection('segmentation')->table($tableName)->insertOnDuplicateKey($arrIns, ['id_val']);
                 DB::connection('segmentation')->table($tableName)->insertIgnore($arrIns);
                 $counter = 0;
@@ -207,11 +220,24 @@ class dataPreloadSynchro extends Command
                     $this->warn(' Un 50%!! ánimo ');
                 elseif ($blockCurrent == 3 * floor($blocks / 4))
                     $this->warn(' Owowowoww 75%!! Quién te lo hubiera dicho hace un rato... ya casi está ');
+                //Insertamos en REdis
+                foreach ($arrApisRedis as $idKey => $garbage) {
+                    Redis::sadd($redisApiName . $idKey, ${'val_' . $idKey});
+                    unset(${'val_' . $idKey});
+                }
+                unset($arrApisRedis);
+                $arrApisRedis = [];
             }
         }
         if (!empty($arrIns)) {
             DB::connection('segmentation')->table($tableName)->insertOnDuplicateKey($arrIns, ['id_val']);
-
+             //Insertamos en REdis
+            foreach ($arrApisRedis as $idKey => $garbage) {
+                Redis::sadd($redisApiName . $idKey, ${'val_' . $idKey});
+                unset(${'val_' . $idKey});
+            }
+            unset($arrApisRedis);
+            $arrApisRedis = [];
         }
         $bar->finish();
         $this->info(' Finished ');

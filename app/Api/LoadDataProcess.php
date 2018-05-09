@@ -30,6 +30,12 @@ class LoadDataProcess
      * @var string
      */
     protected $tablePostFix = '';
+    /**
+     * Variable cogida del config que carga el prefijo de los datos en redis
+     *
+     * @var string
+     */
+    protected $redisPrefix = '';
 
     /* ********************************** VARIABLES PARA RETORNAR LOS DATOS *****************************/
     /**
@@ -45,12 +51,18 @@ class LoadDataProcess
      */
     protected $processedItems = 0;
 
-/**
- * Array que contendrá información adicional, por ejemplo, usuarios procesados en total y actualizaciones total
- *
- * @var array
- */
+    /**
+     * Array que contendrá información adicional, por ejemplo, usuarios procesados en total y actualizaciones total
+     *
+     * @var array
+     */
     protected $processedUsers = 0;
+    /**
+     * Variable cargada del config api-crm. Si es true, inserta y gestiona los datos en redis
+     *
+     * @var boolean
+     */
+    protected $useRedis = false;
 
     /**
      * Función que es llamada cuando se recibe una cantidad ingente de datos, ordenados según segmentación. Es decir, todos los inserts son relativos a una segmentación únicamente
@@ -174,7 +186,7 @@ class LoadDataProcess
         $originalRequest = json_decode($this->dataLoadObj->request, true);
         $data = $originalRequest['data'];
         $arrInputIds = [];
-        $errors=[];
+        $errors = [];
 
         foreach ($data as $datum) {
             $arrIns = [];
@@ -232,7 +244,7 @@ class LoadDataProcess
                         $arrInputIds[$idChannel] = 0;
                     $arrInputIds[$idChannel]++;
                     $arrIdChannels[$idChannel] = $idChannel;
-                    $this->processedItems ++;
+                    $this->processedItems++;
                 }
                 if ($dataActonType == 'bit' || $dataTypeId == 1) {
                     //No recorremos más datos, porque ya tenemos lo que queremos, hacemos un break para salir del foreach
@@ -255,7 +267,7 @@ class LoadDataProcess
                 DB::commit();
 
             }
-           
+
             unset($arrIns);
             unset($arrIdChannels);
 
@@ -264,7 +276,7 @@ class LoadDataProcess
         $this->errors = $errors;
 
         $this->processedUsers = count($arrInputIds);
-       
+
     }
 
 
@@ -318,6 +330,8 @@ class LoadDataProcess
     public function __construct(DataLoad $dataLoadObj)
     {
         $this->tablePostFix = config('api-crm.table_val_postfix');
+        $this->redisPrefix = config('api-crm.redis_crm_prefix');
+        $this->useRedis = config('api-crm.redis_use');
         $this->dataLoadObj = $dataLoadObj;
         $functionality = $dataLoadObj->functionality;
         $result = $this->{$functionality}();
@@ -344,13 +358,14 @@ class LoadDataProcess
     {
         return $this->processedItems;
     }
-/**
- * Función que devolverá información en arrays adicionales
- *
- * @return void
- */
-    public function getProcessedUsers() {
+    /**
+     * Función que devolverá información en arrays adicionales
+     *
+     * @return void
+     */
+    public function getProcessedUsers()
+    {
         return $this->processedUsers;
     }
-    
+
 }

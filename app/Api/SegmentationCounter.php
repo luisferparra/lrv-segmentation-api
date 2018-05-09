@@ -92,7 +92,7 @@ class SegmentationCounter implements SegmentationCounterInterface
         $isBit = $obj->action == 'bit';
         $column = ($inputDataType == 'id') ? 'id' : ($inputDataType == 'crm' ? 'val_crm' : 'val_normalized');
         if ($isBit) {
-            $q = "SELECT  group_concat(id separator ',') as  id FROM `" . $tableName . "` WHERE val=b'" . $values . "'";
+            $q = "SELECT  group_concat(id separator ',') as  id FROM `" . $tableName . "` WHERE id_val=b'" . $values . "'";
         } elseif ($column == 'id') {
                 //Si se busca por ids, nos ahorramos un inner join
             $q = "SELECT group_concat(id separator ',') as id FROM `" . $tableName . "` WHERE id_val in (" . implode(',', $values) . ") limit 5";
@@ -321,7 +321,7 @@ class SegmentationCounter implements SegmentationCounterInterface
     {
         $table = md5($this->uuid);
         Schema::connection('segmentation')->create($table, function ($table) {
-            $table->integer('id')->unasigned()->primary();
+            $table->integer('id')->unsigned()->primary();
             $table->foreign('id')->references('id')->on('bbdd_users');
         });
         return $table;
@@ -377,6 +377,7 @@ class SegmentationCounter implements SegmentationCounterInterface
     {
         ini_set('memory_limit', '4G');
         set_time_limit(0);
+        $start = microtime(true);
         $this->tablePostFix = config('api-crm.table_val_postfix');
         $this->objRequest = $request;
         $a = $request['request'];
@@ -384,6 +385,7 @@ class SegmentationCounter implements SegmentationCounterInterface
         $this->uuid = $request['uuid_token'];
         //$this->createTemporaryTable($this->uuid);
         $return = $this->calculateOutput();
+        $return['totTime'] = microtime(true)-$start;
         return $return;
         //Schema::connection('temp')->dropIfExists($this->uuid);
 

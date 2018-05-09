@@ -45,7 +45,7 @@ class CounterInputRequest extends FormRequest
             "segmentation"=>["required"],
             "segmentation.data"=>["bail","required","array"],
             "segmentation.data.*.api_name" => ["bail","required",'regex:/[a-zA-Z ]+/', 'min:5', 'max:255', 'exists:aaaa_table_controls,api_name'], 
-            "segmentation.data.*.values"=>"required|array|between:1:1000",
+            "segmentation.data.*.values"=>"required|array|min:1",
             "limits"=>"required",
             "limits.limit"=>"present|nullable|integer"
         ];

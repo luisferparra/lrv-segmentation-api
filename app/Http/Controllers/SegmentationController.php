@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use DB;
+use Redis;
 use Auth;
 use Webpatser\Uuid\Uuid;
 use App\Api\Error\Error;
@@ -721,6 +722,9 @@ class SegmentationController extends Controller
 
 		}
 		DB::connection('segmentation')->table($tableNameVals)->where('id', $id)->delete();
+		//Lo borramos de redis si existe
+		$redisPrefix = config('api-crm.redis_crm_prefix');
+		Redis::del($redisPrefix.$tableName.':'.$id);
 		return response()->json(array('data' => array('id' => $id, 'result' => 1, 'msg' => 'Data ' . $id . ' Removed from the api ' . $api_name)));
 
 
